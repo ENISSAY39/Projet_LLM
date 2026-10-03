@@ -48,16 +48,41 @@ Describe 'Get-AlertesReseau' {
         $alertes.Count | Should Be 0
     }
 
-    It 'signale une règle entrante Public ou Any qui ouvre le port 3000' {
+    It 'signale une règle entrante Public qui ouvre le port 3000' {
         $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($regleOuverte)
-        $alertes.Count | Should Be 1
-        $alertes[0] | Should Match 'Autre règle'
+        ($alertes -join "`n") | Should Match '1 règle entrante'
+        ($alertes -join "`n") | Should Match 'Autre règle'
     }
 
-    It 'signale une règle Any sur le port 3000' {
+    It 'ignore une règle Any : seules les règles du profil Public sont signalées' {
         $regleAny = [pscustomobject]@{ DisplayName = 'Tout'; Profile = 'Any'; Action = 'Allow' }
         $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($regleAny)
-        $alertes.Count | Should Be 1
+        $alertes.Count | Should Be 0
+    }
+
+    It 'ignore une règle Public en Bloquer' {
+        $regleBloquee = [pscustomobject]@{ DisplayName = 'Bloquee'; Profile = 'Public'; Action = 'Block' }
+        $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($regleBloquee)
+        $alertes.Count | Should Be 0
+    }
+
+    It 'ignore une règle qui n''est pas Public (Privé seul)' {
+        $reglePrivee = [pscustomobject]@{ DisplayName = 'Privee'; Profile = 'Private'; Action = 'Allow' }
+        $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($reglePrivee)
+        $alertes.Count | Should Be 0
+    }
+
+    It 'compte les règles et regroupe les noms identiques' {
+        $regles = @(
+            [pscustomobject]@{ DisplayName = 'main.exe'; Profile = 'Public'; Action = 'Allow' },
+            [pscustomobject]@{ DisplayName = 'main.exe'; Profile = 'Public'; Action = 'Allow' },
+            [pscustomobject]@{ DisplayName = 'postman.exe'; Profile = 'Domain, Private, Public'; Action = 'Allow' }
+        )
+        $texte = (Get-AlertesReseau -Profils @() -ReglesPort3000 $regles) -join "`n"
+        $texte | Should Match '3 règles'
+        $texte | Should Match '2 noms'
+        $texte | Should Match 'main\.exe \(×2\)'
+        $texte | Should Match 'postman\.exe'
     }
 
     It 'ne signale pas notre propre règle Privé' {

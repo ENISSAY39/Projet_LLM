@@ -120,7 +120,8 @@ function Set-CleAutoStart {
     return $Reglages
 }
 
-# Renvoie les avertissements : réseau non Privé, et règles entrantes « Public » ou « Any » sur le port 3000.
+# Renvoie les avertissements : réseau non Privé, et règles entrantes autorisées sur le profil Public
+# qui ouvrent le port 3000, comptées puis regroupées par nom. Ne corrige rien.
 # Ne corrige rien.
 function Get-AlertesReseau {
     param(
@@ -133,11 +134,18 @@ function Get-AlertesReseau {
             $alertes += "Le réseau « $($profil.InterfaceAlias) » est en profil $($profil.NetworkCategory) : le passer en Privé dans les paramètres Windows (non corrigé par ce script)."
         }
     }
-    foreach ($regle in $ReglesPort3000) {
-        if ($regle.DisplayName -eq $NomRegle) { continue }
-        if ($regle.Action -eq 'Allow' -and $regle.Profile -match 'Public|Any') {
-            $alertes += "La règle entrante « $($regle.DisplayName) » ouvre le port $Port en profil $($regle.Profile) (non corrigée par ce script)."
+    $ouvertes = @($ReglesPort3000 | Where-Object {
+        $_.DisplayName -ne $NomRegle -and $_.Action -eq 'Allow' -and $_.Profile -match 'Public'
+    })
+    if ($ouvertes.Count -gt 0) {
+        $groupes = @($ouvertes | Group-Object DisplayName)
+        $mot = if ($ouvertes.Count -gt 1) { 'règles entrantes' } else { 'règle entrante' }
+        $alertes += "$($ouvertes.Count) $mot autorisée(s) sur le profil Public ouvrent le port $Port ($($groupes.Count) noms) :"
+        foreach ($groupe in $groupes) {
+            $ligne = if ($groupe.Count -gt 1) { "  - $($groupe.Name) (×$($groupe.Count))" } else { "  - $($groupe.Name)" }
+            $alertes += $ligne
         }
+        $alertes += '(non corrigées par ce script)'
     }
     return , $alertes
 }
