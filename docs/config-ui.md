@@ -39,4 +39,4 @@ Procédure guidée : `bash scripts/laptop/comptes.sh` (ticket #5). Rien n'est en
 - Workspace > Models affiche « Modèles 0 » : `famille` n'a aucune fiche d'accès tant qu'on ne l'a pas enregistré une fois via Réglages > Modèles du panneau d'administration. Le wizard (étape 6) supposait le contraire.
 - Permission de groupe « Accès aux modèles » = éditeur de modèles, pas visibilité : à laisser désactivée.
 - Résultat : le père ne voyait aucun modèle. Accès par groupe non résolu ; comptes passés en admin provisoirement (à remettre en `Utilisateur`).
-- **Ticket #5 non validé** : reste l'accès de `famille` au groupe, la liste blanche, le défaut, et les vérifications.
+- **Ticket #5 fermé le 2026-10-03 par décision de Yassine, avec écarts** : comptes passés en admin (le père voit donc tout), accès par groupe, liste blanche, modèle par défaut et vérifications non faits. Le cloisonnement « famille ne voit que `famille` » n'est pas en place ; à reprendre si besoin.
