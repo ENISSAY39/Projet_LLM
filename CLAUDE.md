@@ -4,7 +4,7 @@ Contexte projet pour Claude Code. Tags, tailles et prix vérifiés le 2026-10-03
 
 ## État actuel
 
-Dépôt Git privé initialisé, skills configurés (`docs/agents/`, 2026-10-03), rien d'autre n'est créé. Prochaine étape : phase 0 de `docs/etapes.md`, sur le laptop Windows (RTX 4060 8 Go, 32 Go de RAM, Ollama déjà installé). Mettre cette section à jour à la fin de chaque phase.
+Phase 0 en cours (spec : ticket #1), sur le laptop Windows (RTX 4060 8 Go, 32 Go de RAM, Ollama natif). Fait le 2026-10-03 : l'alias `famille` tourne à 100 % GPU et `scripts/laptop/healthcheck.ps1` le vérifie. Prochaine étape : Open WebUI en Compose (ticket #3). Mettre cette section à jour à la fin de chaque phase.
 
 ## Objectif
 
@@ -20,7 +20,7 @@ Auto-héberger à la maison des LLM open-weight (aucun entraînement), accessibl
 - **2 modèles, pas 4.** Un même modèle sert plusieurs personnes ; chacun a son compte, son historique et ses réglages dans Open WebUI. Pour un assistant personnalisé par personne : preset Open WebUI (Workspace > Models) sur la base `famille`, coût mémoire nul.
 - **Alias stables.** `coder` et `famille` sont créés par Modelfile ; changer de modèle = changer une ligne `FROM`.
 - **Indépendant du matériel.** Un profil (`PROFILE=basique` ou `spark`) fixe les modèles et les réglages Ollama. Changer de machine ne touche ni Open WebUI, ni les comptes, ni le monitoring.
-- **Tout en Docker Compose.** Sur Mac : Ollama en natif (Docker n'accède pas au GPU Apple).
+- **Tout en Docker Compose.** Sur Mac : Ollama en natif (Docker n'accède pas au GPU Apple). Sur le laptop Windows (profil `laptop`) : Ollama en natif aussi, déjà installé.
 - **Rien n'est exposé à Internet.** Hors domicile : Tailscale uniquement.
 
 ```text
@@ -30,17 +30,18 @@ exporters (hôte, GPU, conteneurs, Ollama) ─► Prometheus :9090 ─► Grafan
 
 ## Profils
 
-| Réglage | `basique` (1× RTX 3090) | `spark` (DGX Spark 128 Go) |
-|---|---|---|
-| Base de `coder` | `qwen3.8:27b` (18 Go), `num_ctx` 32768 | `qwen3-coder-next` (52 Go, 3B actifs, sans thinking), `num_ctx` 131072 pour commencer, jusqu'à 240000 après mesure |
-| Base de `famille` | `gemma4:12b` (~8 Go), `num_ctx` 8192 | `gemma4:26b` (MoE, 16–19 Go), `num_ctx` 30000 |
-| `OLLAMA_MAX_LOADED_MODELS` | 1 | 3 |
-| `OLLAMA_NUM_PARALLEL` | 1 | 2 |
-| `OLLAMA_KEEP_ALIVE` | `30m` | `-1` (toujours chargés) |
-| `OLLAMA_FLASH_ATTENTION` / `OLLAMA_KV_CACHE_TYPE` | `1` / `q8_0` | `1` / `q8_0` |
-| `TASK_MODEL` (titres, tags) | modèle courant, autocomplétion coupée | `famille:latest` |
-| Système | x86_64, Ubuntu Server LTS | arm64, DGX OS : Docker et runtime NVIDIA préinstallés |
-| Mémoire | VRAM dédiée, lisible dans `nvidia-smi` | Unifiée, partagée avec l'OS ; `nvidia-smi` n'affiche pas la mémoire. Garder ~16 Go de marge |
+| Réglage | `laptop` (RTX 4060 8 Go, phase 0) | `basique` (1× RTX 3090) | `spark` (DGX Spark 128 Go) |
+|---|---|---|---|
+| Base de `coder` | aucune : `famille` seul | `qwen3.8:27b` (18 Go), `num_ctx` 32768 | `qwen3-coder-next` (52 Go, 3B actifs, sans thinking), `num_ctx` 131072 pour commencer, jusqu'à 240000 après mesure |
+| Base de `famille` | `gemma4:e4b-it-q4_K_M` (6,6 Go), `num_ctx` 30000 | `gemma4:12b` (~8 Go), `num_ctx` 8192 | `gemma4:26b` (MoE, 16–19 Go), `num_ctx` 30000 |
+| Mesures de `famille` | 2026-10-03 : 100 % GPU sans repli, ≈ 85 tokens/s, chargement à froid 6 s (détail : notes `laptop` de `docs/materiel.md`) | à mesurer | à mesurer |
+| `OLLAMA_MAX_LOADED_MODELS` | 1 | 1 | 3 |
+| `OLLAMA_NUM_PARALLEL` | 1 (défaut) | 1 | 2 |
+| `OLLAMA_KEEP_ALIVE` | `30m` au départ, à poser par le script d'installation de l'hôte (`5m` par défaut d'ici là) | `30m` | `-1` (toujours chargés) |
+| `OLLAMA_FLASH_ATTENTION` / `OLLAMA_KV_CACHE_TYPE` | `1` / `q8_0` | `1` / `q8_0` | `1` / `q8_0` |
+| `TASK_MODEL` (titres, tags) | modèle courant (un seul alias) | modèle courant, autocomplétion coupée | `famille:latest` |
+| Système | x86_64, Windows 11, Ollama natif (hors Docker) | x86_64, Ubuntu Server LTS | arm64, DGX OS : Docker et runtime NVIDIA préinstallés |
+| Mémoire | VRAM dédiée, lisible dans `nvidia-smi` ; ≈ 5 Go pris par `famille` | VRAM dédiée, lisible dans `nvidia-smi` | Unifiée, partagée avec l'OS ; `nvidia-smi` n'affiche pas la mémoire. Garder ~16 Go de marge |
 
 ## Documentation
 
@@ -59,7 +60,7 @@ Ces chemins sont volontairement cités sans import : les ouvrir seulement quand 
 - **Skills Matt Pocock**, installés en global (`~/.claude/skills`). Le dépôt se configure une seule fois avec `/setup-matt-pocock-skills`, que seul l'utilisateur peut lancer. Si `docs/agents/` n'existe pas, le lui rappeler et ne démarrer aucun skill d'ingénierie avant.
 - **Enchaînement type**, tapé par l'utilisateur : `/grill-with-docs` → `/to-spec` → `/to-tickets` → `/implement`. En cas de doute : `/ask-matt`. Fin de session : `/handoff`.
 - **À utiliser de toi-même** quand la tâche s'y prête : `research` (tags, variables et docs vérifiés sur sources primaires), `diagnosing-bugs`, `wizard` (étapes que seul l'humain peut faire : pilotes, comptes Open WebUI, secrets), `tdd`, `code-review`.
-- **Ce que « test » veut dire ici** : `docker compose config`, `scripts/healthcheck.sh`, puis la définition de « terminé ». Pas de code applicatif à tester.
+- **Ce que « test » veut dire ici** : `docker compose config`, `scripts/healthcheck.sh` (sur le laptop : `scripts/laptop/healthcheck.ps1`), puis la définition de « terminé ». Pas de code applicatif à tester.
 - **Hors sujet pour ce dépôt** : les skills TypeScript ou de cours (`migrate-to-shoehorn`, `setup-ts-deep-modules`, `scaffold-exercises`).
 
 ## Agent skills
@@ -88,10 +89,12 @@ Projet_LLM/
 ├── .env.example                       # PROFILE, COMPOSE_FILE, WEBUI_SECRET_KEY, GRAFANA_ADMIN_PASSWORD
 ├── profiles/{basique,spark}.env       # variables Ollama du profil
 ├── modelfiles/{basique,spark}/{coder,famille}.Modelfile
+├── modelfiles/laptop/famille.Modelfile                # profil laptop : famille seul
 ├── monitoring/
 │   ├── prometheus/prometheus.yml
 │   └── grafana/provisioning/{datasources,dashboards,alerting}/
 ├── scripts/{pull-models,backup,healthcheck}.sh
+├── scripts/laptop/{pull-models,healthcheck}.ps1       # profil laptop : Ollama natif sous Windows
 └── docs/
     ├── agents/                                     # créé par /setup-matt-pocock-skills
     ├── adr/                                        # décisions, créé par /grill-with-docs
@@ -114,6 +117,13 @@ docker compose logs -f open-webui
 # sauvegarde du volume Open WebUI (préfixé par le nom du projet Compose)
 docker run --rm -v llm-maison_open-webui:/data -v "$PWD/backups":/backup alpine \
   tar czf /backup/openwebui-$(date +%F).tar.gz -C /data .
+```
+
+Profil `laptop` : Ollama est natif, les commandes `ollama` se lancent sans `docker compose exec ollama`.
+
+```powershell
+.\scripts\laptop\pull-models.ps1   # base puis alias famille ; refuse si OLLAMA_MODELS ne vaut pas D:\llms
+.\scripts\laptop\healthcheck.ps1   # point de contrôle unique, à lancer après chaque changement
 ```
 
 ## Définition de « terminé »

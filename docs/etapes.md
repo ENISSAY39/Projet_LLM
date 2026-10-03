@@ -4,8 +4,8 @@
 
 ## Phase 0 — Prototype sur le laptop, avant tout achat
 
+- [x] `scripts/laptop/pull-models.ps1` : base `gemma4:e4b-it-q4_K_M` puis alias `famille`, à 100 % GPU. `scripts/laptop/healthcheck.ps1` le vérifie ; mesures dans les notes `laptop` de `docs/materiel.md`.
 - [ ] Open WebUI en Docker, branché sur l'Ollama déjà installé (commande `docker run` du Quick Start officiel).
-- [ ] `ollama pull gemma4:e4b-it-q4_K_M` (tient dans 8 Go de VRAM) comme base provisoire de `famille`.
 - [ ] Créer les 4 comptes et faire tester quelques jours : valide l'usage réel et le français avant de dépenser.
 
 ## Phase 1 — Serveur (profil `basique`)
