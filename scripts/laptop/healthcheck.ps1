@@ -94,7 +94,7 @@ Reussite "Open WebUI répond sur $OpenWebUi."
 # 6. Le conteneur Open WebUI voit Ollama et l'alias famille, via l'adresse de son environnement.
 # Lu dans le conteneur : c'est l'adresse qu'Open WebUI utilise réellement.
 $Compose = Join-Path $PSScriptRoot '..\..\docker-compose.yml'
-$Tags = docker compose -f $Compose exec -T open-webui sh -c 'curl -sf -m 5 "$OLLAMA_BASE_URL/api/tags"'
+$Tags = (docker compose -f $Compose exec -T open-webui sh -c 'curl -sf -m 5 "$OLLAMA_BASE_URL/api/tags"') -join "`n"
 if ($LASTEXITCODE -ne 0) {
     Echec "Le conteneur Open WebUI ne joint pas Ollama (OLLAMA_BASE_URL dans .env). Ne pas changer OLLAMA_HOST sans avoir consulté Yassine."
 }
