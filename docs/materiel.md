@@ -6,7 +6,7 @@ Photo du marché au 2026-10-03. À relire avant toute décision d'achat ou tout 
 
 | # | Option | Mémoire | Prix relevé | Modèle de code visé | À retenir |
 |---|---|---|---|---|---|
-| 0 | Laptop actuel (RTX 4060) | 8 Go VRAM | 0 € | MoE 30B déjà en place | Prototype uniquement, pas un serveur 24/7 |
+| 0 | Laptop actuel (RTX 4060) | 8 Go VRAM | 0 € | Aucun, `famille` seul | Prototype uniquement, pas un serveur 24/7 |
 | 1 | **Basique** : PC + 1× RTX 3090 d'occasion | 24 Go VRAM | GPU ≈ 700–900 € + PC | `qwen3.8:27b` (dense) | Rapide. Un modèle à la fois : bascule code ↔ famille de ~10–20 s (à mesurer) |
 | 2 | PC + 2× RTX 3090 | 48 Go VRAM | + ≈ 700–900 € | idem, contexte long | Code et famille résidents. Bruit, chaleur, ~700 W en charge |
 | 3 | Mini PC Ryzen AI Max+ 395 | 64 ou 128 Go unifiés | ≈ 2 200 $ / 3 650 $ | MoE ; `qwen3-coder-next` en 128 Go | Meilleur prix au Go. Génération proche du Spark, lecture du prompt ~5× plus lente. Pas de CUDA |
@@ -20,6 +20,13 @@ Comment lire le tableau :
 - La quantité de mémoire décide de la taille du modèle ; la bande passante mémoire décide de la vitesse. Le Spark (273 Go/s) gagne en capacité, pas en vitesse : sur un modèle qui tient dans 24 Go, une RTX 3090 (936 Go/s) reste environ 3× plus rapide (estimation à mesurer).
 - Sur mémoire unifiée (options 3 à 6), `coder` doit être un MoE : un 27B dense plafonne vers 11 tok/s sur le Spark.
 - Ce tableau est une photo d'octobre 2026, pas une liste d'achat : l'investissement est prévu vers décembre 2027 (voir « Calendrier »).
+
+Exigences de contexte pour la machine cible (fixées le 2026-10-03) :
+
+- `coder` : `num_ctx` entre 131072 et 240000. C'est un critère d'achat : une machine qui ne tient pas 131072 est écartée.
+- `famille` : `num_ctx` de 30000 au maximum. Sur le laptop, on garde le plus grand contexte qui tient à 100 % GPU.
+- La machine se dimensionne sur les bornes hautes : `coder` à 240000 et `famille` à 30000.
+- `coder` et `famille` restent chargés en même temps. C'est aussi un critère d'achat : quelqu'un doit pouvoir discuter dans l'interface pendant que Yassine code.
 
 **Choix.** D'ici décembre 2027 : option 0 (laptop, 0 €), ou option 1 si l'usage réel le justifie (carte d'occasion revendable ensuite). En décembre 2027 : décision reprise sur le marché du moment, avec la méthode de la section « Calendrier ». À titre de repère aujourd'hui : l'option 6 vise un modèle de code plus gros, tout résident, plus du fine-tuning ; l'option 3 en 128 Go la même capacité à moitié prix, sans CUDA ; l'option 2 la vitesse sur des modèles ≤ 35B.
 
@@ -43,20 +50,27 @@ Méthode au jalon de novembre 2027 :
 
 1. Sortir les chiffres d'usage : requêtes par jour et par personne, simultanéité maximale, longueur de contexte réelle en code, débit jugé confortable.
 2. Choisir d'abord le modèle de code : tester les candidats du moment sur un vrai dépôt (suite pytest), via une API ou un GPU loué à l'heure.
-3. En déduire la mémoire nécessaire (poids + contexte + modèle `famille` + ~16 Go de marge) et le débit minimal.
-4. Comparer les machines du moment sur quatre critères : mémoire (Go), bande passante (Go/s), prix par Go, besoin de CUDA pour le fine-tuning. Puis bruit et consommation.
+3. En déduire la mémoire nécessaire (poids + contexte aux bornes hautes + modèle `famille` chargé en même temps + ~16 Go de marge) et le débit minimal.
+4. Comparer les machines du moment sur cinq critères : mémoire (Go), bande passante (Go/s), vitesse de lecture du prompt (tokens/s en entrée, décisive avec un contexte de 131072), prix par Go, besoin de CUDA pour le fine-tuning. Puis bruit et consommation.
 5. Créer le profil correspondant dans `profiles/` et `modelfiles/` ; le profil `spark` de `CLAUDE.md` sert de gabarit.
 
 ## Notes par profil
 
+Notes `laptop` (prototype de la phase 0, Ollama natif sous Windows) :
+
+- Alias : `famille` seul. Pas de `coder` sur cette machine ; il reste prévu pour le futur serveur.
+- Stockage : tous les modèles restent dans `D:\llms`, jamais sur C: ni dans un volume Docker. C'est la variable utilisateur Windows `OLLAMA_MODELS` qui le fixe : la vérifier avant tout téléchargement, et aucun script ne la modifie.
+
 Notes `basique` :
 
+- Ne tient aucun des deux critères d'achat : avec 18 Go de poids sur 24 Go, le contexte de `coder` plafonne bien en dessous de 131072, et un seul modèle est chargé à la fois. Ce profil reste une solution d'attente, pas une machine cible.
 - 18 Go de poids laissent environ 5 Go pour le contexte : si `ollama ps` montre une part CPU, descendre `num_ctx` à 24k puis 16k.
 - Alternative sans bascule : tout le monde sur `coder` avec un preset « famille ». À tester avant de l'adopter (latence du thinking, qualité du français).
 - Autres bases à tester : `qwen3.6:27b-coding`, `qwen3-coder:30b` (MoE, ~19 Go), `gemma4:e4b-it-q4_K_M` (6,6 Go).
 
 Notes `spark` (gabarit daté d'octobre 2026, à recréer pour la machine réellement achetée) :
 
+- Contexte : `coder` à 131072 pour commencer, à monter jusqu'à 240000 après mesure (le modèle annonce 256K sur ollama.com) ; `famille` à 30000. Mémoire et débit à ces contextes, les deux modèles chargés : à mesurer, en gardant ~16 Go de marge.
 - Toutes les images doivent exister en arm64 (`docker manifest inspect`). À vérifier en priorité : `nvidia_gpu_exporter` et `ollama-metrics`, sinon build local.
 - Playbooks officiels NVIDIA (Open WebUI + Ollama, Tailscale, DGX Dashboard, Unsloth pour le fine-tuning) : build.nvidia.com/spark.
 - Voie plus rapide hors Ollama : vLLM ou TensorRT-LLM en NVFP4, branché dans Open WebUI comme connexion OpenAI-compatible. Optimisation ultérieure, pas un prérequis.

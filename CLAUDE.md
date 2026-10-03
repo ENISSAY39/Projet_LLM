@@ -12,7 +12,7 @@ Auto-héberger à la maison des LLM open-weight (aucun entraînement), accessibl
 
 | Qui | Usage | Modèle |
 |---|---|---|
-| Yassine (admin) | Code, agents (Cline), data/ML | `coder` |
+| Yassine (admin) | Code, agents, data/ML | `coder` |
 | Mère, père, sœur | Questions du quotidien en français, aucun bagage technique | `famille` |
 
 ## Décisions
@@ -24,9 +24,7 @@ Auto-héberger à la maison des LLM open-weight (aucun entraînement), accessibl
 - **Rien n'est exposé à Internet.** Hors domicile : Tailscale uniquement.
 
 ```text
-téléphones / PC du foyer ─► Open WebUI :3000 ─► ollama-metrics ─┐
-                                                                ├─► Ollama :11434 ─► GPU
-laptop dev (Cline) ─────────────────────────────────────────────┘
+téléphones / PC du foyer ─► Open WebUI :3000 ─► ollama-metrics ─► Ollama (port 11434 non publié) ─► GPU
 exporters (hôte, GPU, conteneurs, Ollama) ─► Prometheus :9090 ─► Grafana :3001
 ```
 
@@ -34,8 +32,8 @@ exporters (hôte, GPU, conteneurs, Ollama) ─► Prometheus :9090 ─► Grafan
 
 | Réglage | `basique` (1× RTX 3090) | `spark` (DGX Spark 128 Go) |
 |---|---|---|
-| Base de `coder` | `qwen3.8:27b` (18 Go), `num_ctx` 32768 | `qwen3-coder-next` (52 Go, 3B actifs, sans thinking), `num_ctx` 65536 puis monter |
-| Base de `famille` | `gemma4:12b` (~8 Go), `num_ctx` 8192 | `gemma4:26b` (MoE, 16–19 Go), `num_ctx` 16384 |
+| Base de `coder` | `qwen3.8:27b` (18 Go), `num_ctx` 32768 | `qwen3-coder-next` (52 Go, 3B actifs, sans thinking), `num_ctx` 131072 pour commencer, jusqu'à 240000 après mesure |
+| Base de `famille` | `gemma4:12b` (~8 Go), `num_ctx` 8192 | `gemma4:26b` (MoE, 16–19 Go), `num_ctx` 30000 |
 | `OLLAMA_MAX_LOADED_MODELS` | 1 | 3 |
 | `OLLAMA_NUM_PARALLEL` | 1 | 2 |
 | `OLLAMA_KEEP_ALIVE` | `30m` | `-1` (toujours chargés) |

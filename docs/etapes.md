@@ -38,8 +38,8 @@
 
 ## Phase 4 — Réseau et sécurité
 
-- Ne jamais ouvrir de port sur la box (3000, 3001, 9090, 11434).
-- Ollama n'a aucune authentification : le port 11434 reste sur un LAN de confiance. Attention, Docker contourne `ufw` pour les ports publiés ; pour restreindre, publier sur `127.0.0.1` et passer par un tunnel SSH.
+- Ne jamais ouvrir de port sur la box (3000, 3001, 9090).
+- Ollama n'a aucune authentification : son port 11434 n'est pas publié, il n'est joignable que depuis le réseau Compose. Attention, Docker contourne `ufw` pour les ports publiés (3000, 3001, 9090) ; pour restreindre, publier sur `127.0.0.1` et passer par un tunnel SSH.
 - Hors domicile, et HTTPS (exigé par les navigateurs pour le micro) : Tailscale + `tailscale serve`.
 - `ENABLE_ADMIN_CHAT_ACCESS=False` : l'admin ne lit pas les conversations de la famille.
 - Grafana : mot de passe admin fort dans `.env`, accès LAN uniquement.
@@ -58,7 +58,6 @@ Détail dans `docs/monitoring.md`. Ordre : exporters et Prometheus, cibles `UP`,
 
 - Recherche web pour la famille (sans elle, le modèle ignore l'actualité) : moteur DDGS sans clé dans l'image `:main`, ou SearXNG auto-hébergé.
 - Documents (RAG) : l'image `:main` embarque son moteur d'embeddings ; choisir un modèle multilingue pour le français.
-- Cline : provider Ollama, `http://<ip-serveur>:11434`, modèle `coder:latest`.
 
 ## Phase 8 — Migration vers la machine achetée (visée : décembre 2027)
 
