@@ -4,7 +4,13 @@ Contexte projet pour Claude Code. Tags, tailles et prix vérifiés le 2026-10-03
 
 ## État actuel
 
-Phase 0 en cours (spec : ticket #1), sur le laptop Windows (RTX 4060 8 Go, 32 Go de RAM, Ollama natif). Fait le 2026-10-03 : l'alias `famille` tourne à 100 % GPU et `scripts/laptop/healthcheck.ps1` le vérifie. Prochaine étape : Open WebUI en Compose (ticket #3). Mettre cette section à jour à la fin de chaque phase.
+Phase 0 en cours (spec : ticket #1), sur le laptop Windows (RTX 4060 8 Go, 32 Go de RAM, Ollama natif). Tickets fermés le 2026-10-03 :
+
+- #2 : l'alias `famille` tourne à 100 % GPU, `scripts/laptop/healthcheck.ps1` le vérifie.
+- #3 : Open WebUI en Compose (`docker-compose.yml`, image `v0.11.4`), branché sur l'Ollama natif, port 3000. Recréation du conteneur sans déconnexion non testée.
+- #4 : `scripts/laptop/hote.ps1` (variables, pare-feu port 3000 en Privé, démarrage d'Ollama et de Docker, capot ; `-WhatIf` et `-Annuler`), appliqué. `OLLAMA_KEEP_ALIVE` à `4h`. Annulation non testée sur la machine.
+
+Prochaines étapes, tickets ouverts : #5 comptes et droits, #6 sauvegarde et restauration du volume (prête pour l'agent), #7 accès téléphones et guide famille, #8 semaine de test et verdict. Mettre cette section à jour à la fin de chaque phase.
 
 ## Objectif
 
