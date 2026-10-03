@@ -16,6 +16,7 @@ $DossierModeles = 'D:\llms'
 $Ollama = 'http://127.0.0.1:11434'
 $Alias = 'famille'
 $Modele = "${Alias}:latest"
+$OpenWebUi = 'http://127.0.0.1:3000'
 # Moitié du débit mesuré avec tout le modèle sur le GPU (environ 85 tokens/s).
 # Ollama 0.32.6 annonce « 100% GPU » même quand des couches débordent sur le CPU :
 # le débit, lui, s'effondre (19 à 21 tokens/s avec 8 à 10 couches sur 43 sur le GPU).
@@ -81,3 +82,23 @@ if ($Debit -lt $DebitMinimal) {
 }
 $Chargement = if ($DejaCharge) { 'déjà chargé' } else { 'chargement à froid en {0:N1} s' -f ($Reponse.load_duration / 1e9) }
 Reussite ("Ollama annonce $Alias à 100 % GPU, contexte $($Charge.context_length) : {0:N0} tokens/s, $Chargement." -f $Debit)
+
+# 5. Open WebUI répond sur le port 3000 du laptop.
+try {
+    Invoke-RestMethod "$OpenWebUi/health" -TimeoutSec 5 | Out-Null
+} catch {
+    Echec "Open WebUI ne répond pas sur $OpenWebUi : lancer docker compose up -d à la racine du dépôt."
+}
+Reussite "Open WebUI répond sur $OpenWebUi."
+
+# 6. Le conteneur Open WebUI voit Ollama et l'alias famille, via l'adresse de son environnement.
+# Lu dans le conteneur : c'est l'adresse qu'Open WebUI utilise réellement.
+$Compose = Join-Path $PSScriptRoot '..\..\docker-compose.yml'
+$Tags = docker compose -f $Compose exec -T open-webui sh -c 'curl -sf -m 5 "$OLLAMA_BASE_URL/api/tags"'
+if ($LASTEXITCODE -ne 0) {
+    Echec "Le conteneur Open WebUI ne joint pas Ollama (OLLAMA_BASE_URL dans .env). Ne pas changer OLLAMA_HOST sans avoir consulté Yassine."
+}
+if ($Tags -notmatch [regex]::Escape("`"name`":`"$Modele`"")) {
+    Echec "Le conteneur Open WebUI joint Ollama mais ne voit pas l'alias $Alias."
+}
+Reussite "Open WebUI voit Ollama et l'alias $Alias."

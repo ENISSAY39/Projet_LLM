@@ -1,0 +1,19 @@
+# Phase 0 (laptop) : Open WebUI seul, branché sur l'Ollama natif de l'hôte.
+# Les valeurs propres à la machine viennent de .env (voir .env.example).
+name: llm-maison
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.11.4
+    restart: unless-stopped
+    ports: ["3000:8080"]
+    volumes:
+      - open-webui:/app/backend/data
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:?renseigner OLLAMA_BASE_URL dans .env}
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY:?renseigner WEBUI_SECRET_KEY dans .env}
+      ENABLE_ADMIN_CHAT_ACCESS: "False"
+      DEFAULT_USER_ROLE: pending
+
+volumes:
+  open-webui:
