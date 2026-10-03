@@ -5,6 +5,7 @@
 ## Phase 0 — Prototype sur le laptop, avant tout achat
 
 - [x] `scripts/laptop/pull-models.ps1` : base `gemma4:e4b-it-q4_K_M` puis alias `famille`, à 100 % GPU. `scripts/laptop/healthcheck.ps1` le vérifie ; mesures dans les notes `laptop` de `docs/materiel.md`.
+- [ ] Script d'installation de l'hôte (ticket #4) : `scripts\laptop\hote.ps1 -WhatIf` puis `scripts\laptop\hote.ps1` en administrateur, par Yassine. Annulation : `-Annuler`. Ensuite `scripts\laptop\healthcheck.ps1`.
 - [ ] Open WebUI en Compose (`docker-compose.yml`, projet `llm-maison`), branché sur l'Ollama déjà installé : `.env` depuis `.env.example` (`OLLAMA_BASE_URL=http://host.docker.internal:11434`, `WEBUI_SECRET_KEY` fixe), puis `docker compose up -d`. `scripts\laptop\healthcheck.ps1` contrôle le port 3000 et la vue de l'alias depuis le conteneur.
 - [ ] Créer les 4 comptes et faire tester quelques jours : valide l'usage réel et le français avant de dépenser.
 

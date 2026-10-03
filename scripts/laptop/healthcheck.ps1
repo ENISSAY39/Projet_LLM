@@ -102,3 +102,35 @@ if ($Tags -notmatch [regex]::Escape("`"name`":`"$Modele`"")) {
     Echec "Le conteneur Open WebUI joint Ollama mais ne voit pas l'alias $Alias."
 }
 Reussite "Open WebUI voit Ollama et l'alias $Alias."
+
+# 7. Réglages de l'hôte posés par scripts\laptop\hote.ps1 (valeurs décidées au ticket #4).
+if ($env:OLLAMA_CONTEXT_LENGTH) {
+    Echec "OLLAMA_CONTEXT_LENGTH est défini ($env:OLLAMA_CONTEXT_LENGTH) : lancer scripts\laptop\hote.ps1 pour le retirer."
+}
+$KeepAliveAttendu = '4h'
+$KeepAliveUtilisateur = [Environment]::GetEnvironmentVariable('OLLAMA_KEEP_ALIVE', 'User')
+if ($KeepAliveUtilisateur -ne $KeepAliveAttendu) {
+    Echec "OLLAMA_KEEP_ALIVE vaut « $KeepAliveUtilisateur » au lieu de « $KeepAliveAttendu » : lancer scripts\laptop\hote.ps1."
+}
+Reussite "Réglages de l'hôte : OLLAMA_KEEP_ALIVE = $KeepAliveAttendu, OLLAMA_CONTEXT_LENGTH absent."
+
+# 8. Pare-feu : le port 3000 n'est ouvert que sur le profil Privé.
+$NomRegle = 'llm-maison : Open WebUI (port 3000, profil Privé)'
+$Regle = Get-NetFirewallRule -DisplayName $NomRegle -ErrorAction SilentlyContinue
+if (-not $Regle) {
+    Echec "Règle de pare-feu absente : lancer scripts\laptop\hote.ps1."
+}
+$Profils = $Regle.Profile.ToString()
+$Port = (Get-NetFirewallPortFilter -AssociatedNetFirewallRule $Regle).LocalPort
+if ($Regle.Enabled -ne 'True' -or $Regle.Direction -ne 'Inbound' -or $Regle.Action -ne 'Allow' -or $Profils -ne 'Private' -or $Port -ne '3000') {
+    Echec "Règle de pare-feu « $NomRegle » incorrecte (profil : $Profils, port : $Port) : lancer scripts\laptop\hote.ps1."
+}
+Reussite "Pare-feu : port 3000 ouvert au seul profil Privé."
+
+# 9. Ollama n'écoute pas sur le réseau : son port 11434 n'est joignable que depuis cette machine.
+$Ecoute = @(Get-NetTCPConnection -State Listen -LocalPort 11434 -ErrorAction SilentlyContinue)
+$Exposes = @($Ecoute | Where-Object { $_.LocalAddress -notin '127.0.0.1', '::1' })
+if ($Exposes) {
+    Echec "Le port 11434 écoute sur le réseau ($($Exposes.LocalAddress -join ', ')) : Ollama doit rester sur 127.0.0.1."
+}
+Reussite "Port 11434 : écoute en local uniquement."
