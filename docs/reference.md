@@ -11,7 +11,7 @@ services:
   ollama:
     image: ollama/ollama:latest                 # épingler une version une fois validée
     restart: unless-stopped
-    ports: ["11434:11434"]                      # pour Cline, LAN de confiance uniquement
+    # aucun port publié : Ollama n'est joignable que depuis le réseau Compose
     env_file: profiles/${PROFILE}.env
     volumes:
       - ollama:/root/.ollama

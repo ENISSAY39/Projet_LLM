@@ -4,8 +4,8 @@
 
 ## Phase 0 — Prototype sur le laptop, avant tout achat
 
+- [x] `scripts/laptop/pull-models.ps1` : base `gemma4:e4b-it-q4_K_M` puis alias `famille`, à 100 % GPU. `scripts/laptop/healthcheck.ps1` le vérifie ; mesures dans les notes `laptop` de `docs/materiel.md`.
 - [ ] Open WebUI en Docker, branché sur l'Ollama déjà installé (commande `docker run` du Quick Start officiel).
-- [ ] `ollama pull gemma4:e4b-it-q4_K_M` (tient dans 8 Go de VRAM) comme base provisoire de `famille`.
 - [ ] Créer les 4 comptes et faire tester quelques jours : valide l'usage réel et le français avant de dépenser.
 
 ## Phase 1 — Serveur (profil `basique`)
@@ -21,7 +21,7 @@
 1. `.env` : `PROFILE=basique`, `WEBUI_SECRET_KEY=$(openssl rand -hex 32)`, `GRAFANA_ADMIN_PASSWORD`. Garder la clé fixe, sinon tout le monde est déconnecté à chaque recréation du conteneur.
 2. `docker compose up -d`
 3. `scripts/pull-models.sh` : pull des deux bases du profil, puis `ollama create` des deux alias.
-4. `ollama ps` doit afficher `100% GPU` pour chaque alias. Sinon, baisser `num_ctx`.
+4. Lancer le script de vérification du profil (`scripts/healthcheck.sh`) : pour chaque alias, il contrôle la répartition GPU annoncée par Ollama et le débit. S'il échoue sur ce contrôle, baisser `num_ctx`. `ollama ps` seul ne suffit pas (notes `laptop` de `docs/materiel.md`).
 
 ## Phase 3 — Open WebUI (réglages faits dans l'interface, à consigner dans `docs/config-ui.md`)
 
@@ -38,8 +38,8 @@
 
 ## Phase 4 — Réseau et sécurité
 
-- Ne jamais ouvrir de port sur la box (3000, 3001, 9090, 11434).
-- Ollama n'a aucune authentification : le port 11434 reste sur un LAN de confiance. Attention, Docker contourne `ufw` pour les ports publiés ; pour restreindre, publier sur `127.0.0.1` et passer par un tunnel SSH.
+- Ne jamais ouvrir de port sur la box (3000, 3001, 9090).
+- Ollama n'a aucune authentification : son port 11434 n'est pas publié, il n'est joignable que depuis le réseau Compose. Attention, Docker contourne `ufw` pour les ports publiés (3000, 3001, 9090) ; pour restreindre, publier sur `127.0.0.1` et passer par un tunnel SSH.
 - Hors domicile, et HTTPS (exigé par les navigateurs pour le micro) : Tailscale + `tailscale serve`.
 - `ENABLE_ADMIN_CHAT_ACCESS=False` : l'admin ne lit pas les conversations de la famille.
 - Grafana : mot de passe admin fort dans `.env`, accès LAN uniquement.
@@ -58,7 +58,6 @@ Détail dans `docs/monitoring.md`. Ordre : exporters et Prometheus, cibles `UP`,
 
 - Recherche web pour la famille (sans elle, le modèle ignore l'actualité) : moteur DDGS sans clé dans l'image `:main`, ou SearXNG auto-hébergé.
 - Documents (RAG) : l'image `:main` embarque son moteur d'embeddings ; choisir un modèle multilingue pour le français.
-- Cline : provider Ollama, `http://<ip-serveur>:11434`, modèle `coder:latest`.
 
 ## Phase 8 — Migration vers la machine achetée (visée : décembre 2027)
 
