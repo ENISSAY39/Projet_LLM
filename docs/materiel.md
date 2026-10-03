@@ -68,7 +68,7 @@ Notes `laptop` (prototype de la phase 0, Ollama natif sous Windows) :
 Notes `basique` :
 
 - Ne tient aucun des deux critères d'achat : avec 18 Go de poids sur 24 Go, le contexte de `coder` plafonne bien en dessous de 131072, et un seul modèle est chargé à la fois. Ce profil reste une solution d'attente, pas une machine cible.
-- 18 Go de poids laissent environ 5 Go pour le contexte : si `ollama ps` montre une part CPU, descendre `num_ctx` à 24k puis 16k.
+- 18 Go de poids laissent environ 5 Go pour le contexte : si le script de vérification échoue sur le contrôle GPU (part CPU ou débit effondré), descendre `num_ctx` à 24k puis 16k.
 - Alternative sans bascule : tout le monde sur `coder` avec un preset « famille ». À tester avant de l'adopter (latence du thinking, qualité du français).
 - Autres bases à tester : `qwen3.6:27b-coding`, `qwen3-coder:30b` (MoE, ~19 Go), `gemma4:e4b-it-q4_K_M` (6,6 Go).
 

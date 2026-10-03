@@ -129,7 +129,7 @@ Profil `laptop` : Ollama est natif, les commandes `ollama` se lancent sans `dock
 ## Définition de « terminé »
 
 - [ ] Le conteneur `ollama` voit le GPU (`nvidia-smi`).
-- [ ] `coder` et `famille` tournent à 100 % GPU au contexte visé ; débit mesuré et noté.
+- [ ] `coder` et `famille` tiennent entièrement sur le GPU au contexte visé : le script de vérification du profil passe (répartition GPU annoncée par Ollama et débit) ; débit noté.
 - [ ] Un compte famille ne voit que `famille` ; l'admin voit tout.
 - [ ] 10 questions réelles en français validées par la famille.
 - [ ] Toutes les cibles Prometheus sont `UP` ; chaque dashboard affiche des données.
@@ -147,7 +147,7 @@ Profil `laptop` : Ollama est natif, les commandes `ollama` se lancent sans `dock
 - Ce qui dépend du matériel va dans le profil, jamais en dur ailleurs.
 - Secrets dans `.env`, jamais commités.
 - Demander confirmation avant toute commande destructive (`docker compose down -v`, `docker volume rm`, `ollama rm`).
-- Après tout changement de modèle, de contexte ou de variable Ollama : relancer `ollama ps` et remesurer le débit.
+- Après tout changement de modèle, de contexte ou de variable Ollama : relancer le script de vérification du profil, qui contrôle la répartition GPU annoncée par Ollama et le débit. `ollama ps` seul ne suffit pas ; sur le laptop, la preuve directe est la ligne `offloaded 43/43 layers to GPU` du journal, à lire à la main (notes `laptop` de `docs/materiel.md`).
 - Ne rien exposer à Internet.
 
 ## Limites connues

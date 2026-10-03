@@ -21,7 +21,7 @@
 1. `.env` : `PROFILE=basique`, `WEBUI_SECRET_KEY=$(openssl rand -hex 32)`, `GRAFANA_ADMIN_PASSWORD`. Garder la clé fixe, sinon tout le monde est déconnecté à chaque recréation du conteneur.
 2. `docker compose up -d`
 3. `scripts/pull-models.sh` : pull des deux bases du profil, puis `ollama create` des deux alias.
-4. `ollama ps` doit afficher `100% GPU` pour chaque alias. Sinon, baisser `num_ctx`.
+4. Lancer le script de vérification du profil (`scripts/healthcheck.sh`) : pour chaque alias, il contrôle la répartition GPU annoncée par Ollama et le débit. S'il échoue sur ce contrôle, baisser `num_ctx`. `ollama ps` seul ne suffit pas (notes `laptop` de `docs/materiel.md`).
 
 ## Phase 3 — Open WebUI (réglages faits dans l'interface, à consigner dans `docs/config-ui.md`)
 
