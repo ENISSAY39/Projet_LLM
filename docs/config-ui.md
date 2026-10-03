@@ -38,5 +38,5 @@ Procédure guidée : `bash scripts/laptop/comptes.sh` (ticket #5). Rien n'est en
 - 2026-10-03 : comptes créés avec de vraies adresses e-mail (pas `@maison.local`), rôle `Utilisateur`, groupe `famille` avec les 3 comptes : OK.
 - Workspace > Models affiche « Modèles 0 » : `famille` n'a aucune fiche d'accès tant qu'on ne l'a pas enregistré une fois via Réglages > Modèles du panneau d'administration. Le wizard (étape 6) supposait le contraire.
 - Permission de groupe « Accès aux modèles » = éditeur de modèles, pas visibilité : à laisser désactivée.
-- Résultat : le père ne voyait aucun modèle. Accès par groupe non résolu ; comptes passés en admin provisoirement (à remettre en `Utilisateur`).
-- **Ticket #5 fermé le 2026-10-03 par décision de Yassine, avec écarts** : comptes passés en admin (le père voit donc tout), accès par groupe, liste blanche, modèle par défaut et vérifications non faits. Le cloisonnement « famille ne voit que `famille` » n'est pas en place ; à reprendre si besoin.
+- Résolu le 2026-10-03 (confirmé par Yassine) : `famille` est créé dans l'espace de travail et réservé au groupe `famille` (père, mère, sœur). Ticket #5 fermé plus tôt en forçage, réglage terminé ensuite.
+- Non revérifié par l'agent : rôle `Utilisateur` des trois comptes (ils avaient été passés en admin), liste blanche Ollama, modèle par défaut, inscription refusée, recherche web coupée, Analytics.
