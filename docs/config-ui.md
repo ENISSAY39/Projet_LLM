@@ -35,4 +35,8 @@ Procédure guidée : `bash scripts/laptop/comptes.sh` (ticket #5). Rien n'est en
 
 ## Écarts constatés à l'écran
 
-_À remplir pendant l'exécution du wizard._
+- 2026-10-03 : comptes créés avec de vraies adresses e-mail (pas `@maison.local`), rôle `Utilisateur`, groupe `famille` avec les 3 comptes : OK.
+- Workspace > Models affiche « Modèles 0 » : `famille` n'a aucune fiche d'accès tant qu'on ne l'a pas enregistré une fois via Réglages > Modèles du panneau d'administration. Le wizard (étape 6) supposait le contraire.
+- Permission de groupe « Accès aux modèles » = éditeur de modèles, pas visibilité : à laisser désactivée.
+- Résultat : le père ne voyait aucun modèle. Accès par groupe non résolu ; comptes passés en admin provisoirement (à remettre en `Utilisateur`).
+- **Ticket #5 non validé** : reste l'accès de `famille` au groupe, la liste blanche, le défaut, et les vérifications.
