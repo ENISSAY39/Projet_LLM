@@ -10,11 +10,11 @@ Phase 0 en cours (spec : ticket #1), sur le laptop Windows (RTX 4060 8 Go, 32 Go
 - #3 : Open WebUI en Compose (`docker-compose.yml`, image `v0.11.4`), branché sur l'Ollama natif, port 3000. Recréation du conteneur sans déconnexion non testée.
 - #4 : `scripts/laptop/hote.ps1` (variables, pare-feu port 3000 en Privé, démarrage d'Ollama et de Docker, capot ; `-WhatIf` et `-Annuler`), appliqué. `OLLAMA_KEEP_ALIVE` à `4h`. Annulation non testée sur la machine.
 
-Prochaines étapes, tickets ouverts : #5 comptes et droits, #6 sauvegarde et restauration du volume (prête pour l'agent), #7 accès téléphones et guide famille, #8 semaine de test et verdict. Mettre cette section à jour à la fin de chaque phase.
+Prochaines étapes, tickets ouverts : #5 comptes et droits, #6 sauvegarde et restauration du volume (prête pour l'agent), #7 accès téléphones par Tailscale et guide famille (Tailscale installé sur le laptop le 2026-10-04 : nom `llm.tail8fed51.ts.net` (renommé dans la console, relevé avec `tailscale status --json`), interface en Privé, la règle pare-feu du #4 la couvre, pas de nouvelle règle ; reste la politique d'accès limitant la famille au port 3000, l'invitation des comptes et le test en 4G ; le #10 retire des scripts le contrôle du Wi-Fi de la maison), #8 semaine de test et verdict. Mettre cette section à jour à la fin de chaque phase.
 
 ## Objectif
 
-Auto-héberger à la maison des LLM open-weight (aucun entraînement), accessibles par navigateur sur le réseau local, pour 4 personnes, avec supervision Prometheus + Grafana.
+Auto-héberger à la maison des LLM open-weight (aucun entraînement), accessibles par navigateur à travers Tailscale (la famille est à Toulouse, le laptop à Montpellier), pour 4 personnes, avec supervision Prometheus + Grafana.
 
 | Qui | Usage | Modèle |
 |---|---|---|
@@ -27,10 +27,10 @@ Auto-héberger à la maison des LLM open-weight (aucun entraînement), accessibl
 - **Alias stables.** `coder` et `famille` sont créés par Modelfile ; changer de modèle = changer une ligne `FROM`.
 - **Indépendant du matériel.** Un profil (`PROFILE=basique` ou `spark`) fixe les modèles et les réglages Ollama. Changer de machine ne touche ni Open WebUI, ni les comptes, ni le monitoring.
 - **Tout en Docker Compose.** Sur Mac : Ollama en natif (Docker n'accède pas au GPU Apple). Sur le laptop Windows (profil `laptop`) : Ollama en natif aussi, déjà installé.
-- **Rien n'est exposé à Internet.** Hors domicile : Tailscale uniquement.
+- **Rien n'est exposé à Internet.** Aucune ouverture de port sur la box. La famille n'est jamais sur le même réseau que la machine : Tailscale est le seul accès, dans le périmètre depuis le 2026-10-04 (ticket #7). Plan gratuit : 6 utilisateurs ; Yassine + 3 = 4. Famille invitée dans le tailnet de Yassine ; partage de nœud en repli. Accès par le nom MagicDNS, plus de réservation DHCP.
 
 ```text
-téléphones / PC du foyer ─► Open WebUI :3000 ─► ollama-metrics ─► Ollama (port 11434 non publié) ─► GPU
+téléphones / PC du foyer (via Tailscale) ─► Open WebUI :3000 ─► ollama-metrics ─► Ollama (port 11434 non publié) ─► GPU
 exporters (hôte, GPU, conteneurs, Ollama) ─► Prometheus :9090 ─► Grafana :3001
 ```
 
@@ -166,6 +166,7 @@ Profil `laptop` : Ollama est natif, les commandes `ollama` se lancent sans `dock
 
 - D'ici décembre 2027 : rester sur le laptop (option 0) ou monter l'option 1 ?
 - Machine cible : décision au jalon de novembre 2027 (`docs/materiel.md`).
+- Où vivra le serveur de décembre 2027 : à Montpellier (avec Yassine) ou à Toulouse (avec la famille) ? Conditionne la latence de la famille, l'accès SSH et l'admin, la box et l'électricité, et si Tailscale reste indispensable.
 - ~~Valeur de `OLLAMA_KEEP_ALIVE` sur le laptop~~ : décidé le 2026-10-03, `4h` (ticket #4, sur le cas de 31 s).
 - Canal de notification des alertes (Telegram, Discord, e-mail).
 - Qualité du français de la base `famille` : à valider en phase 0.

@@ -11,7 +11,7 @@
 
 ## Phase 1 — Serveur (profil `basique`)
 
-1. Ubuntu Server LTS, IP fixe par réservation DHCP sur la box, SSH par clé.
+1. Ubuntu Server LTS, SSH par clé. Accès par le nom MagicDNS Tailscale ; une IP fixe sur la box n'est utile que si on y accède aussi depuis le réseau local (selon l'emplacement du serveur, point ouvert de `CLAUDE.md`).
 2. Pilote NVIDIA : `sudo ubuntu-drivers install`, redémarrer, vérifier `nvidia-smi`.
 3. Docker Engine + plugin Compose (dépôt officiel Docker).
 4. NVIDIA Container Toolkit, puis `sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker`.
@@ -41,7 +41,7 @@
 
 - Ne jamais ouvrir de port sur la box (3000, 3001, 9090).
 - Ollama n'a aucune authentification : son port 11434 n'est pas publié, il n'est joignable que depuis le réseau Compose. Attention, Docker contourne `ufw` pour les ports publiés (3000, 3001, 9090) ; pour restreindre, publier sur `127.0.0.1` et passer par un tunnel SSH.
-- Hors domicile, et HTTPS (exigé par les navigateurs pour le micro) : Tailscale + `tailscale serve`.
+- Accès de la famille : Tailscale (dans le périmètre depuis le 2026-10-04, ticket #7). HTTPS (exigé par les navigateurs pour le micro) : `tailscale serve`, hors périmètre de la phase 0.
 - `ENABLE_ADMIN_CHAT_ACCESS=False` : l'admin ne lit pas les conversations de la famille.
 - Grafana : mot de passe admin fort dans `.env`, accès LAN uniquement.
 
