@@ -34,7 +34,7 @@ exporters (hôte, GPU, conteneurs, Ollama) ─► Prometheus :9090 ─► Grafan
 |---|---|---|---|
 | Base de `coder` | aucune : `famille` seul | `qwen3.8:27b` (18 Go), `num_ctx` 32768 | `qwen3-coder-next` (52 Go, 3B actifs, sans thinking), `num_ctx` 131072 pour commencer, jusqu'à 240000 après mesure |
 | Base de `famille` | `gemma4:e4b-it-q4_K_M` (6,6 Go), `num_ctx` 30000 | `gemma4:12b` (~8 Go), `num_ctx` 8192 | `gemma4:26b` (MoE, 16–19 Go), `num_ctx` 30000 |
-| Mesures de `famille` | 2026-10-03 : 100 % GPU sans repli, ≈ 85 tokens/s, chargement à froid 6 s (détail : notes `laptop` de `docs/materiel.md`) | à mesurer | à mesurer |
+| Mesures de `famille` | 2026-10-03 : 100 % GPU sans repli, ≈ 85 tokens/s, chargement à froid 6 s quand les fichiers du modèle sont en cache disque, 20 à 31 s au premier chargement ou après une longue inactivité (mesuré par le script ; détail : notes `laptop` de `docs/materiel.md`) | à mesurer | à mesurer |
 | `OLLAMA_MAX_LOADED_MODELS` | 1 | 1 | 3 |
 | `OLLAMA_NUM_PARALLEL` | 1 (défaut) | 1 | 2 |
 | `OLLAMA_KEEP_ALIVE` | `30m` au départ, à poser par le script d'installation de l'hôte (`5m` par défaut d'ici là) | `30m` | `-1` (toujours chargés) |
@@ -160,6 +160,7 @@ Profil `laptop` : Ollama est natif, les commandes `ollama` se lancent sans `dock
 
 - D'ici décembre 2027 : rester sur le laptop (option 0) ou monter l'option 1 ?
 - Machine cible : décision au jalon de novembre 2027 (`docs/materiel.md`).
+- Valeur de `OLLAMA_KEEP_ALIVE` sur le laptop : à décider sur le cas du chargement à froid de 31 s, pas sur celui de 6 s.
 - Canal de notification des alertes (Telegram, Discord, e-mail).
 - Qualité du français de la base `famille` : à valider en phase 0.
 - Recherche web activée ou non pour la famille.
