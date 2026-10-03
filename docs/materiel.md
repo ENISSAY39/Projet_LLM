@@ -1,0 +1,64 @@
+# Matériel, calendrier d'achat et notes par profil
+
+Photo du marché au 2026-10-03. À relire avant toute décision d'achat ou tout changement de profil.
+
+## Toutes les options
+
+| # | Option | Mémoire | Prix relevé | Modèle de code visé | À retenir |
+|---|---|---|---|---|---|
+| 0 | Laptop actuel (RTX 4060) | 8 Go VRAM | 0 € | MoE 30B déjà en place | Prototype uniquement, pas un serveur 24/7 |
+| 1 | **Basique** : PC + 1× RTX 3090 d'occasion | 24 Go VRAM | GPU ≈ 700–900 € + PC | `qwen3.8:27b` (dense) | Rapide. Un modèle à la fois : bascule code ↔ famille de ~10–20 s (à mesurer) |
+| 2 | PC + 2× RTX 3090 | 48 Go VRAM | + ≈ 700–900 € | idem, contexte long | Code et famille résidents. Bruit, chaleur, ~700 W en charge |
+| 3 | Mini PC Ryzen AI Max+ 395 | 64 ou 128 Go unifiés | ≈ 2 200 $ / 3 650 $ | MoE ; `qwen3-coder-next` en 128 Go | Meilleur prix au Go. Génération proche du Spark, lecture du prompt ~5× plus lente. Pas de CUDA |
+| 4 | Mac mini M5 Pro | jusqu'à 64 Go unifiés | dès 1 699 $, 64 Go en option | MoE 30–35B | Silencieux. Ollama natif, pas de CUDA |
+| 5 | DGX Spark 64 Go | 64 Go unifiés | 4 999 $, en vente le 23 oct. 2026 | `qwen3.6:35b` (MoE) | Trop juste pour le coder 80B (52 Go) + famille : mauvais rapport prix/usage |
+| 6 | **DGX Spark 128 Go** | 128 Go unifiés | 6 950 $ (3 999 $ au lancement) | `qwen3-coder-next` (80B MoE) | Tout résident, contexte long, CUDA, fine-tuning. ≈ 45 tok/s mesurés sur ce modèle |
+| 7 | Au-delà | 32 à 256 Go | RTX 5090 ≈ 4 300–5 000 $ de rue, RTX PRO 6000 96 Go, 2 Spark en cluster | — | Hors besoin pour 4 personnes |
+
+Comment lire le tableau :
+
+- La quantité de mémoire décide de la taille du modèle ; la bande passante mémoire décide de la vitesse. Le Spark (273 Go/s) gagne en capacité, pas en vitesse : sur un modèle qui tient dans 24 Go, une RTX 3090 (936 Go/s) reste environ 3× plus rapide (estimation à mesurer).
+- Sur mémoire unifiée (options 3 à 6), `coder` doit être un MoE : un 27B dense plafonne vers 11 tok/s sur le Spark.
+- Ce tableau est une photo d'octobre 2026, pas une liste d'achat : l'investissement est prévu vers décembre 2027 (voir « Calendrier »).
+
+**Choix.** D'ici décembre 2027 : option 0 (laptop, 0 €), ou option 1 si l'usage réel le justifie (carte d'occasion revendable ensuite). En décembre 2027 : décision reprise sur le marché du moment, avec la méthode de la section « Calendrier ». À titre de repère aujourd'hui : l'option 6 vise un modèle de code plus gros, tout résident, plus du fine-tuning ; l'option 3 en 128 Go la même capacité à moitié prix, sans CUDA ; l'option 2 la vitesse sur des modèles ≤ 35B.
+
+Reste du PC (options 1 et 2) : CPU récent 6–8 cœurs, 32 Go de RAM minimum (64 conseillé), NVMe 1 To, alimentation 850 W (1 200 W pour deux cartes), carte mère avec deux slots PCIe x16 espacés, boîtier bien ventilé, hors des pièces de vie.
+
+## Calendrier
+
+| Période | Action |
+|---|---|
+| Oct. 2026 → nov. 2027 | Faire tourner la stack (option 0 ou 1) et accumuler les mesures d'usage dans Grafana et l'écran Analytics d'Open WebUI |
+| Nov. 2027 | Jalon de décision : choisir le modèle, puis la machine |
+| Déc. 2027 | Achat, puis phase 8 (migration) |
+
+Pourquoi ne rien figer aujourd'hui :
+
+- Le DGX Spark actuel (GB10) aura sans doute un successeur : la feuille de route publique de NVIDIA place un « Vera Rubin Spark » en LPDDR6 sur 2027–2028. Côté AMD, Gorgon Halo (jusqu'à 192 Go) est annoncé pour fin 2026 et la génération Zen 6 « Medusa » pour 2027 ; les caractéristiques de Medusa Halo ne sont que des rumeurs.
+- Ne pas compter sur une baisse des prix : TrendForce prévoit une DRAM encore tendue en 2027, Micron une amélioration progressive en 2028 seulement.
+- Les modèles open-weight auront changé plusieurs fois : les tags de ce fichier seront périmés.
+
+Méthode au jalon de novembre 2027 :
+
+1. Sortir les chiffres d'usage : requêtes par jour et par personne, simultanéité maximale, longueur de contexte réelle en code, débit jugé confortable.
+2. Choisir d'abord le modèle de code : tester les candidats du moment sur un vrai dépôt (suite pytest), via une API ou un GPU loué à l'heure.
+3. En déduire la mémoire nécessaire (poids + contexte + modèle `famille` + ~16 Go de marge) et le débit minimal.
+4. Comparer les machines du moment sur quatre critères : mémoire (Go), bande passante (Go/s), prix par Go, besoin de CUDA pour le fine-tuning. Puis bruit et consommation.
+5. Créer le profil correspondant dans `profiles/` et `modelfiles/` ; le profil `spark` de `CLAUDE.md` sert de gabarit.
+
+## Notes par profil
+
+Notes `basique` :
+
+- 18 Go de poids laissent environ 5 Go pour le contexte : si `ollama ps` montre une part CPU, descendre `num_ctx` à 24k puis 16k.
+- Alternative sans bascule : tout le monde sur `coder` avec un preset « famille ». À tester avant de l'adopter (latence du thinking, qualité du français).
+- Autres bases à tester : `qwen3.6:27b-coding`, `qwen3-coder:30b` (MoE, ~19 Go), `gemma4:e4b-it-q4_K_M` (6,6 Go).
+
+Notes `spark` (gabarit daté d'octobre 2026, à recréer pour la machine réellement achetée) :
+
+- Toutes les images doivent exister en arm64 (`docker manifest inspect`). À vérifier en priorité : `nvidia_gpu_exporter` et `ollama-metrics`, sinon build local.
+- Playbooks officiels NVIDIA (Open WebUI + Ollama, Tailscale, DGX Dashboard, Unsloth pour le fine-tuning) : build.nvidia.com/spark.
+- Voie plus rapide hors Ollama : vLLM ou TensorRT-LLM en NVFP4, branché dans Open WebUI comme connexion OpenAI-compatible. Optimisation ultérieure, pas un prérequis.
+
+Dans les deux profils : tout dépôt GGUF de Hugging Face se tire avec `ollama pull hf.co/<user>/<repo>:<quant>`. Départager les candidats `coder` sur un vrai dépôt avec la suite pytest, pas sur les classements (les benchmarks publiés viennent des éditeurs).
