@@ -65,3 +65,52 @@ Describe 'Get-AlertesReseau' {
         $alertes.Count | Should Be 0
     }
 }
+
+Describe 'Test-OuvrePort' {
+    It 'couvre le port 3000 par un port exact' {
+        Test-OuvrePort -Ports @('3000') -Protocole 'TCP' | Should Be $true
+    }
+
+    It 'couvre le port 3000 par Any' {
+        Test-OuvrePort -Ports @('Any') -Protocole 'Any' | Should Be $true
+    }
+
+    It 'couvre le port 3000 par une plage' {
+        Test-OuvrePort -Ports @('2999-3001') -Protocole 'TCP' | Should Be $true
+    }
+
+    It 'couvre le port 3000 dans une liste' {
+        Test-OuvrePort -Ports @('80,3000') -Protocole 'TCP' | Should Be $true
+    }
+
+    It 'ignore une plage qui ne contient pas 3000' {
+        Test-OuvrePort -Ports @('3001-3010') -Protocole 'TCP' | Should Be $false
+    }
+
+    It 'ignore le port 3000 en UDP' {
+        Test-OuvrePort -Ports @('3000') -Protocole 'UDP' | Should Be $false
+    }
+
+    It 'ignore un autre port' {
+        Test-OuvrePort -Ports @('80') -Protocole 'TCP' | Should Be $false
+    }
+}
+
+Describe 'Set-CleAutoStart' {
+    It 'ajoute la clé si elle est absente, sans toucher aux autres' {
+        $r = Set-CleAutoStart -Reglages ([pscustomobject]@{ Autre = 1 }) -Presente $true -Valeur $true
+        $r.AutoStart | Should Be $true
+        $r.Autre | Should Be 1
+    }
+
+    It 'remplace la valeur si la clé existe' {
+        $r = Set-CleAutoStart -Reglages ([pscustomobject]@{ AutoStart = $false }) -Presente $true -Valeur $true
+        $r.AutoStart | Should Be $true
+    }
+
+    It 'supprime la clé si elle était absente avant' {
+        $r = Set-CleAutoStart -Reglages ([pscustomobject]@{ AutoStart = $true; Autre = 1 }) -Presente $false -Valeur $null
+        $r.PSObject.Properties['AutoStart'] | Should BeNullOrEmpty
+        $r.Autre | Should Be 1
+    }
+}

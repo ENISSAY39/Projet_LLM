@@ -104,8 +104,9 @@ if ($Tags -notmatch [regex]::Escape("`"name`":`"$Modele`"")) {
 Reussite "Open WebUI voit Ollama et l'alias $Alias."
 
 # 7. Réglages de l'hôte posés par scripts\laptop\hote.ps1 (valeurs décidées au ticket #4).
-if ($env:OLLAMA_CONTEXT_LENGTH) {
-    Echec "OLLAMA_CONTEXT_LENGTH est défini ($env:OLLAMA_CONTEXT_LENGTH) : lancer scripts\laptop\hote.ps1 pour le retirer."
+$ContexteUtilisateur = [Environment]::GetEnvironmentVariable('OLLAMA_CONTEXT_LENGTH', 'User')
+if ($ContexteUtilisateur) {
+    Echec "OLLAMA_CONTEXT_LENGTH est défini ($ContexteUtilisateur) : lancer scripts\laptop\hote.ps1 pour le retirer."
 }
 $KeepAliveAttendu = '4h'
 $KeepAliveUtilisateur = [Environment]::GetEnvironmentVariable('OLLAMA_KEEP_ALIVE', 'User')

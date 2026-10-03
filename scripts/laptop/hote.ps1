@@ -39,6 +39,7 @@ $Sauvegarde = Join-Path $Dossier 'hote-avant.json'
 $Ollama = Join-Path $env:LOCALAPPDATA 'Programs\Ollama\ollama app.exe'
 $RaccourciOllama = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup\Ollama.lnk'
 $SettingsDocker = Join-Path $env:APPDATA 'Docker\settings-store.json'
+$CopieDocker = Join-Path $Dossier 'settings-store.json.avant'
 $SousGroupeAlim = '4f971e89-eebd-4455-a8de-9e59040e7347'
 $ReglageCapot = '5ca83367-6e45-459f-a27b-476b1d01c936'
 
@@ -81,6 +82,44 @@ function Get-PlanEnvironnement {
     }
 }
 
+# Vrai si une règle (ports LocalPort et protocole) ouvre le port 3000 en TCP : port exact, plage,
+# liste séparée par des virgules, ou « Any ».
+function Test-OuvrePort {
+    param(
+        [string[]]$Ports,
+        [string]$Protocole
+    )
+    if ($Protocole -notin 'TCP', 'Any') { return $false }
+    foreach ($ligne in $Ports) {
+        foreach ($morceau in ($ligne -split ',')) {
+            $m = $morceau.Trim()
+            if ($m -eq 'Any') { return $true }
+            if ($m -match '^(\d+)-(\d+)$') {
+                if ([int]$Matches[1] -le $Port -and $Port -le [int]$Matches[2]) { return $true }
+            } elseif ($m -eq "$Port") {
+                return $true
+            }
+        }
+    }
+    return $false
+}
+
+# Pose ou retire la clé AutoStart de settings-store.json ; les autres clés ne bougent pas.
+function Set-CleAutoStart {
+    param(
+        $Reglages,
+        [bool]$Presente,
+        $Valeur
+    )
+    if ($Reglages.PSObject.Properties['AutoStart']) {
+        $Reglages.PSObject.Properties.Remove('AutoStart')
+    }
+    if ($Presente) {
+        $Reglages | Add-Member -NotePropertyName AutoStart -NotePropertyValue $Valeur
+    }
+    return $Reglages
+}
+
 # Renvoie les avertissements : réseau non Privé, et règles entrantes « Public » ou « Any » sur le port 3000.
 # Ne corrige rien.
 function Get-AlertesReseau {
@@ -113,15 +152,20 @@ function Get-EtatActuel {
         $variables[$nom] = [Environment]::GetEnvironmentVariable($nom, 'User')
     }
 
-    $regles = @(Get-NetFirewallRule -Direction Inbound -Enabled True -ErrorAction SilentlyContinue | Where-Object {
-        (Get-NetFirewallPortFilter -AssociatedNetFirewallRule $_ -ErrorAction SilentlyContinue).LocalPort -contains "$Port"
-    } | ForEach-Object {
-        [pscustomobject]@{ DisplayName = $_.DisplayName; Profile = $_.Profile.ToString(); Action = $_.Action.ToString() }
+    $regles = @(Get-NetFirewallRule -Direction Inbound -Enabled True -ErrorAction SilentlyContinue | ForEach-Object {
+        $filtre = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $_ -ErrorAction SilentlyContinue
+        if ($filtre -and (Test-OuvrePort -Ports @($filtre.LocalPort) -Protocole $filtre.Protocol.ToString())) {
+            [pscustomobject]@{ DisplayName = $_.DisplayName; Profile = $_.Profile.ToString(); Action = $_.Action.ToString() }
+        }
     })
 
-    $docker = $null
-    if (Test-Path $SettingsDocker) {
-        $docker = (Get-Content $SettingsDocker -Raw | ConvertFrom-Json).AutoStart
+    $dockerFichier = Test-Path $SettingsDocker
+    $dockerCle = $false
+    $dockerValeur = $null
+    if ($dockerFichier) {
+        $reglagesDocker = Get-Content $SettingsDocker -Raw | ConvertFrom-Json
+        $dockerCle = [bool]$reglagesDocker.PSObject.Properties['AutoStart']
+        $dockerValeur = $reglagesDocker.AutoStart
     }
 
     return [pscustomobject]@{
@@ -129,7 +173,9 @@ function Get-EtatActuel {
         ReglesPort       = $regles
         ReglePareFeu     = [bool](Get-NetFirewallRule -DisplayName $NomRegle -ErrorAction SilentlyContinue)
         RaccourciOllama  = Test-Path $RaccourciOllama
-        DockerAutoStart  = $docker
+        DockerFichier    = $dockerFichier
+        DockerCle        = $dockerCle
+        DockerValeur     = $dockerValeur
         Capot            = Get-ReglageCapot
         Profils          = @(Get-NetConnectionProfile -ErrorAction SilentlyContinue)
     }
@@ -188,8 +234,12 @@ function Set-RaccourciOllama([bool]$Present) {
 }
 
 # Docker Desktop n'expose pas ce réglage autrement que par son interface ou son fichier settings-store.json.
-function Set-DockerAutoStart($Valeur) {
-    if ($null -eq $Valeur) { return }
+# Avant la première écriture, une copie du fichier entier est posée à côté de la sauvegarde.
+function Set-DockerAutoStart {
+    param(
+        [bool]$Presente,
+        $Valeur
+    )
     if (-not (Test-Path $SettingsDocker)) {
         Alerte "Fichier de réglages Docker introuvable : lancer Docker Desktop une fois, puis relancer ce script."
         return
@@ -197,9 +247,13 @@ function Set-DockerAutoStart($Valeur) {
     if (Get-Process 'Docker Desktop' -ErrorAction SilentlyContinue) {
         Alerte "Docker Desktop est ouvert : il peut réécrire son fichier de réglages. Vérifier « Démarrer Docker Desktop à la connexion » après fermeture."
     }
-    if ($PSCmdlet.ShouldProcess($SettingsDocker, "AutoStart = $($Valeur.ToString().ToLower())")) {
+    if ($PSCmdlet.ShouldProcess($CopieDocker, 'Copie de sécurité de settings-store.json (si absente)')) {
+        New-Item -ItemType Directory -Path $Dossier -Force | Out-Null
+        if (-not (Test-Path $CopieDocker)) { Copy-Item $SettingsDocker $CopieDocker }
+    }
+    if ($PSCmdlet.ShouldProcess($SettingsDocker, $(if ($Presente) { "AutoStart = $($Valeur.ToString().ToLower())" } else { 'Retirer AutoStart' }))) {
         $reglages = Get-Content $SettingsDocker -Raw | ConvertFrom-Json
-        $reglages | Add-Member -NotePropertyName AutoStart -NotePropertyValue $Valeur -Force
+        $reglages = Set-CleAutoStart -Reglages $reglages -Presente $Presente -Valeur $Valeur
         [IO.File]::WriteAllText($SettingsDocker, ($reglages | ConvertTo-Json -Depth 20), $Utf8SansBom)
     }
 }
@@ -239,7 +293,9 @@ function Write-Sauvegarde($Etat) {
         Env             = $Etat.Env
         ReglePareFeu    = $Etat.ReglePareFeu
         RaccourciOllama = $Etat.RaccourciOllama
-        DockerAutoStart = $Etat.DockerAutoStart
+        DockerFichier   = $Etat.DockerFichier
+        DockerCle       = $Etat.DockerCle
+        DockerAutoStart = $Etat.DockerValeur
         CapotAC         = $Etat.Capot.AC
         CapotDC         = $Etat.Capot.DC
     }
@@ -285,7 +341,7 @@ function Invoke-Appliquer {
     }
     Set-PareFeu
     if (-not $etat.RaccourciOllama) { Set-RaccourciOllama $true }
-    Set-DockerAutoStart $true
+    Set-DockerAutoStart -Presente $true -Valeur $true
     Set-Capot -AC 0 -DC 1
 
     Restart-Ollama
@@ -312,7 +368,9 @@ function Invoke-Annuler {
     }
     if (-not $d.ReglePareFeu) { Remove-PareFeu }
     Set-RaccourciOllama ([bool]$d.RaccourciOllama)
-    Set-DockerAutoStart $d.DockerAutoStart
+    if ($d.DockerFichier) {
+        Set-DockerAutoStart -Presente ([bool]$d.DockerCle) -Valeur $d.DockerAutoStart
+    }
     Set-Capot -AC $d.CapotAC -DC $d.CapotDC
 
     Restart-Ollama
