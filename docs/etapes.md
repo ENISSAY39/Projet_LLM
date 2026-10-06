@@ -59,6 +59,12 @@ Détail dans `docs/monitoring.md`. Ordre : exporters et Prometheus, cibles `UP`,
 
 - Recherche web pour la famille (sans elle, le modèle ignore l'actualité) : moteur DDGS sans clé dans l'image `:main`, ou SearXNG auto-hébergé.
 - Documents (RAG) : l'image `:main` embarque son moteur d'embeddings ; choisir un modèle multilingue pour le français.
+- Fine-tuning (exploration, pour le futur alias `coder`, à envisager après le RAG) : entraînement QLoRA de Gemma 4 E4B sur Colab avec Unsloth, notebook `nb/Gemma4_(E4B)-Text.ipynb` du dépôt ENISSAY39/ENISSAY39.
+  - Réexporter en Q4_K_M depuis l'adaptateur `lora/`, sans réentraîner : le Q8_0 ne tient pas (la base Q4 fait déjà 6,6 Go pour environ 6,9 Go de VRAM utilisable).
+  - GGUF dans `D:\llms`, puis `ollama create gemma4-python -f Modelfile`.
+  - Comparaison au terminal (`ollama run <modèle> --verbose`), même `num_ctx` que `famille`, sans toucher aux réglages d'Open WebUI.
+  - Un seul modèle chargé à la fois sur le laptop : tests hors des plages horaires de la famille, et pas pendant la semaine de test (#8).
+  - Terminé quand : le modèle tourne en Q4_K_M à 100 % GPU ; un tableau base vs fine-tuné sur 10 questions Python (qualité, tokens/s) est consigné ; une décision est écrite (piste pour `coder` ou abandon) ; le healthcheck est vert et l'alias `famille` est inchangé.
 
 ## Phase 8 — Migration vers la machine achetée (visée : décembre 2027)
 
