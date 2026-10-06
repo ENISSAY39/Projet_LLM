@@ -28,7 +28,7 @@ Exigences de contexte pour la machine cible (fixées le 2026-10-03) :
 - La machine se dimensionne sur les bornes hautes : `coder` à 240000 et `famille` à 30000.
 - `coder` et `famille` restent chargés en même temps. C'est aussi un critère d'achat : quelqu'un doit pouvoir discuter dans l'interface pendant que Yassine code.
 
-**Choix.** D'ici décembre 2027 : option 0 (laptop, 0 €), ou option 1 si l'usage réel le justifie (carte d'occasion revendable ensuite). En décembre 2027 : décision reprise sur le marché du moment, avec la méthode de la section « Calendrier ». À titre de repère aujourd'hui : l'option 6 vise un modèle de code plus gros, tout résident, plus du fine-tuning ; l'option 3 en 128 Go la même capacité à moitié prix, sans CUDA ; l'option 2 la vitesse sur des modèles ≤ 35B.
+**Choix.** D'ici décembre 2027 : option 0 (laptop, 0 €). L'option 1 est écartée depuis le 2026-10-07 : aucun achat avant la machine cible. En décembre 2027 : décision reprise sur le marché du moment, avec la méthode de la section « Calendrier ». À titre de repère aujourd'hui : l'option 6 vise un modèle de code plus gros, tout résident, plus du fine-tuning ; l'option 3 en 128 Go la même capacité à moitié prix, sans CUDA ; l'option 2 la vitesse sur des modèles ≤ 35B.
 
 Reste du PC (options 1 et 2) : CPU récent 6–8 cœurs, 32 Go de RAM minimum (64 conseillé), NVMe 1 To, alimentation 850 W (1 200 W pour deux cartes), carte mère avec deux slots PCIe x16 espacés, boîtier bien ventilé, hors des pièces de vie.
 
@@ -36,8 +36,9 @@ Reste du PC (options 1 et 2) : CPU récent 6–8 cœurs, 32 Go de RAM minimum (6
 
 | Période | Action |
 |---|---|
-| Oct. 2026 → nov. 2027 | Faire tourner la stack (option 0 ou 1) et accumuler les mesures d'usage dans Grafana et l'écran Analytics d'Open WebUI |
-| Nov. 2027 | Jalon de décision : choisir le modèle, puis la machine |
+| Oct. 2026 → nov. 2027 | Répéter la stack sur le laptop (monitoring, HTTPS, RAG), sans la famille : elle n'utilise le service qu'à l'ouverture, sur la machine cible (`docs/etapes.md`) |
+| Fin 2026 | Essai court de `coder` sur un GPU loué à l'heure, sur un vrai dépôt : un modèle local sert-il face au cloud ? Résultat à noter ici. S'il ne sert pas, le critère d'achat `coder` à 131072 est à revoir |
+| Nov. 2027 | Jalon de décision : choisir le modèle (second essai sur GPU loué, modèles du moment), puis la machine |
 | Déc. 2027 | Achat, puis phase 8 (migration) |
 
 Pourquoi ne rien figer aujourd'hui :
@@ -48,7 +49,7 @@ Pourquoi ne rien figer aujourd'hui :
 
 Méthode au jalon de novembre 2027 :
 
-1. Sortir les chiffres d'usage : requêtes par jour et par personne, simultanéité maximale, longueur de contexte réelle en code, débit jugé confortable.
+1. Partir des besoins `coder` de Yassine (longueur de contexte réelle en code, débit jugé confortable) et des critères d'achat ci-dessus. Pas de chiffres d'usage de la famille : elle n'utilise pas le service avant l'ouverture, et `famille` pèse peu dans le dimensionnement (décidé le 2026-10-07).
 2. Choisir d'abord le modèle de code : tester les candidats du moment sur un vrai dépôt (suite pytest), via une API ou un GPU loué à l'heure.
 3. En déduire la mémoire nécessaire (poids + contexte aux bornes hautes + modèle `famille` chargé en même temps + ~16 Go de marge) et le débit minimal.
 4. Comparer les machines du moment sur cinq critères : mémoire (Go), bande passante (Go/s), vitesse de lecture du prompt (tokens/s en entrée, décisive avec un contexte de 131072), prix par Go, besoin de CUDA pour le fine-tuning. Puis bruit et consommation.
@@ -68,7 +69,7 @@ Notes `laptop` (prototype de la phase 0, Ollama natif sous Windows) :
 
 Notes `basique` :
 
-- Ne tient aucun des deux critères d'achat : avec 18 Go de poids sur 24 Go, le contexte de `coder` plafonne bien en dessous de 131072, et un seul modèle est chargé à la fois. Ce profil reste une solution d'attente, pas une machine cible.
+- Ne tient aucun des deux critères d'achat : avec 18 Go de poids sur 24 Go, le contexte de `coder` plafonne bien en dessous de 131072, et un seul modèle est chargé à la fois. Ce profil reste une solution d'attente, pas une machine cible. Écarté le 2026-10-07 : gardé ici comme repère chiffré, aucun achat prévu.
 - 18 Go de poids laissent environ 5 Go pour le contexte : si le script de vérification échoue sur le contrôle GPU (part CPU ou débit effondré), descendre `num_ctx` à 24k puis 16k.
 - Alternative sans bascule : tout le monde sur `coder` avec un preset « famille ». À tester avant de l'adopter (latence du thinking, qualité du français).
 - Autres bases à tester : `qwen3.6:27b-coding`, `qwen3-coder:30b` (MoE, ~19 Go), `gemma4:e4b-it-q4_K_M` (6,6 Go).

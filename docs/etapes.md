@@ -2,6 +2,28 @@
 
 À lire avant de commencer une phase. Cocher au fur et à mesure.
 
+## Ordre d'ici décembre 2027 (décidé le 2026-10-07)
+
+Aucun achat avant décembre 2027. Le laptop est le prototype de Yassine seul : la famille n'utilise pas le service avant l'ouverture (voir plus bas). Les numéros de phase sont conservés, l'ordre de travail est celui-ci, une spec par chantier :
+
+1. Monitoring complet sur le laptop (phase 5), en répétition de la stack de la machine cible.
+2. HTTPS par `tailscale serve` (phase 4).
+3. RAG (phase 7).
+4. En parallèle, hors des specs : fine-tuning (phase 7) et essais `coder` sur GPU loué (`docs/materiel.md`).
+
+Les phases 1 et 2 attendent l'achat et se déroulent avec la phase 8. La sauvegarde reste manuelle (`scripts/laptop/backup.ps1`), sans planification.
+
+## Ouverture à la famille
+
+La famille commence à utiliser le service quand tout ceci est en place sur la machine cible :
+
+- [ ] Machine cible installée, `coder` et `famille` chargés en même temps.
+- [ ] Monitoring complet, alertes comprises.
+- [ ] RAG (documents).
+- [ ] HTTPS par `tailscale serve`.
+
+Non bloquants : le fine-tuning (son issue peut être l'abandon) et la recherche web (point ouvert). Les 3 comptes famille et leur accès Tailscale restent en place d'ici là : ils servent à tester ce que la famille verra et migrent avec le volume.
+
 ## Phase 0 — Prototype sur le laptop, avant tout achat
 
 - [x] `scripts/laptop/pull-models.ps1` : base `gemma4:e4b-it-q4_K_M` puis alias `famille`, à 100 % GPU. `scripts/laptop/healthcheck.ps1` le vérifie ; mesures dans les notes `laptop` de `docs/materiel.md`.
@@ -10,6 +32,8 @@
 - [x] Créer les 4 comptes et faire tester quelques jours : valide l'usage réel et le français avant de dépenser.
 
 ## Phase 1 — Serveur (profil `basique`)
+
+Reportée à l'achat (2026-10-07) : c'est la préparation d'hôte de la phase 8, à adapter à la machine cible, et à sauter sur un DGX Spark. Aucun serveur `basique` n'est prévu d'ici là.
 
 1. Ubuntu Server LTS, SSH par clé. Accès par le nom MagicDNS Tailscale ; une IP fixe sur la box n'est utile que si on y accède aussi depuis le réseau local (selon l'emplacement du serveur, point ouvert de `CLAUDE.md`).
 2. Pilote NVIDIA : `sudo ubuntu-drivers install`, redémarrer, vérifier `nvidia-smi`.
@@ -49,6 +73,8 @@
 
 Détail dans `docs/monitoring.md`. Ordre : exporters et Prometheus, cibles `UP`, dashboards provisionnés, proxy Ollama, alertes.
 
+Prochain chantier, sur le laptop : périmètre complet, voir la section « Profil `laptop` » de `docs/monitoring.md`.
+
 ## Phase 6 — Exploitation
 
 - Sauvegarde hebdomadaire du volume `open-webui` (cron), et avant chaque mise à jour. Tester une restauration.
@@ -59,7 +85,7 @@ Détail dans `docs/monitoring.md`. Ordre : exporters et Prometheus, cibles `UP`,
 
 - Recherche web pour la famille (sans elle, le modèle ignore l'actualité) : moteur DDGS sans clé dans l'image `:main`, ou SearXNG auto-hébergé.
 - Documents (RAG) : l'image `:main` embarque son moteur d'embeddings ; choisir un modèle multilingue pour le français.
-- Fine-tuning (exploration, pour le futur alias `coder`, à envisager après le RAG) : entraînement QLoRA de Gemma 4 E4B sur Colab avec Unsloth, notebook `nb/Gemma4_(E4B)-Text.ipynb` du dépôt ENISSAY39/ENISSAY39.
+- Fine-tuning (exploration, commencée ; part de la base de `famille` mais vise le futur alias `coder`, l'alias `famille` ne change pas) : entraînement QLoRA de Gemma 4 E4B sur Colab avec Unsloth, notebook `nb/Gemma4_(E4B)-Text.ipynb` du dépôt ENISSAY39/ENISSAY39.
   - Réexporter en Q4_K_M depuis l'adaptateur `lora/`, sans réentraîner : le Q8_0 ne tient pas (la base Q4 fait déjà 6,6 Go pour environ 6,9 Go de VRAM utilisable).
   - GGUF dans `D:\llms`, puis `ollama create gemma4-python -f Modelfile`.
   - Comparaison au terminal (`ollama run <modèle> --verbose`), même `num_ctx` que `famille`, sans toucher aux réglages d'Open WebUI.

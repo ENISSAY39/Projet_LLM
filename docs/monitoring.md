@@ -32,6 +32,15 @@ Alertes (Grafana, provisionnées, un canal de notification à choisir) :
 
 Les noms exacts des métriques se lisent sur le `/metrics` de chaque exporter avant d'écrire une requête.
 
+Canal de notification : Discord, par webhook (URL dans `.env`). Repli : Telegram. Décidé le 2026-10-07.
+
+Profil `laptop` (décidé le 2026-10-07, rien n'est encore écrit ni testé) :
+
+- But : répéter la stack de la machine cible, pas surveiller le laptop. Périmètre complet : les six services, tous les dashboards, toutes les alertes.
+- Mêmes exporters Linux que la cible, lancés dans Docker Desktop, pour que les fichiers Compose, les dashboards et les alertes soient ceux de la cible. Conséquence acceptée : les chiffres d'hôte décrivent la VM WSL2 de Docker, pas Windows.
+- À vérifier sur les sources de chaque projet avant d'écrire le Compose : `cadvisor` et `gpu-exporter` dans Docker Desktop, `ollama-metrics` devant un Ollama natif (`host.docker.internal:11434`), streaming compris. Un exporter qui ne fonctionne pas est remplacé par son équivalent Windows, lui seul.
+- Sans la famille, les chiffres d'usage ne sont que ceux des essais de Yassine.
+
 Spécificités Spark : la mémoire GPU n'est pas rapportée par `nvidia-smi`, les panneaux VRAM restent vides. Suivre la mémoire avec `node-exporter` ; le DGX Dashboard (`https://localhost:11000`) sert de contrôle croisé.
 
 Option : métriques HTTP et traces d'Open WebUI via OpenTelemetry (`ENABLE_OTEL=true`, `ENABLE_OTEL_METRICS=true`, `OTEL_EXPORTER_OTLP_ENDPOINT`) vers un collecteur OTel ; logs dans Loki.

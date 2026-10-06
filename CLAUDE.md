@@ -16,7 +16,14 @@ Phase 0 terminée le 2026-10-06 (spec : ticket #1), sur le laptop Windows (RTX 4
 
 Verdict (#8), rendu par Yassine le 2026-10-06 après 2 jours d'usage par la famille au lieu des 7 prévus : français de `famille` validé ; choix du matériel jugé prématuré (voir « Points ouverts »).
 
-Prochaine étape : à décider, la phase 1 dépend du matériel. Mettre cette section à jour à la fin de chaque phase.
+Décisions du 2026-10-07 (détail : « Ordre d'ici décembre 2027 » et « Ouverture à la famille » de `docs/etapes.md`) :
+
+- Aucun achat avant décembre 2027 : l'option 1 (`basique`) est écartée, la phase 1 est reportée à l'achat avec la phase 8.
+- Le laptop est le prototype de Yassine seul. La famille n'utilise le service qu'à l'ouverture, sur la machine cible, avec monitoring, RAG et HTTPS en place. Ses comptes et son accès Tailscale restent en place.
+- Pas de `coder` local d'ici là ; deux essais sur GPU loué (fin 2026, puis au jalon).
+- Sauvegarde manuelle, sans planification.
+
+Prochaine étape : monitoring complet sur le laptop (phase 5, section « Profil `laptop` » de `docs/monitoring.md`), puis HTTPS, puis RAG, une spec par chantier. Mettre cette section à jour à la fin de chaque phase.
 
 ## Objectif
 
@@ -170,10 +177,10 @@ Profil `laptop` : Ollama est natif, les commandes `ollama` se lancent sans `dock
 
 ## Points ouverts
 
-- D'ici décembre 2027 : rester sur le laptop (option 0) ou monter l'option 1 ? Non tranché le 2026-10-06 : trop tôt pour choisir le matériel. Piste évoquée par Yassine pour la machine cible : un DGX Spark.
+- ~~D'ici décembre 2027 : laptop (option 0) ou option 1~~ : décidé le 2026-10-07, laptop seul. Piste évoquée par Yassine pour la machine cible : un DGX Spark.
 - Machine cible : décision au jalon de novembre 2027 (`docs/materiel.md`).
 - Où vivra le serveur de décembre 2027 : à Montpellier (avec Yassine) ou à Toulouse (avec la famille) ? Conditionne la latence de la famille, l'accès SSH et l'admin, la box et l'électricité, et si Tailscale reste indispensable.
 - ~~Valeur de `OLLAMA_KEEP_ALIVE` sur le laptop~~ : décidé le 2026-10-03, `4h` (ticket #4, sur le cas de 31 s).
-- Canal de notification des alertes (Telegram, Discord, e-mail).
+- ~~Canal de notification des alertes~~ : décidé le 2026-10-07, Discord par webhook, Telegram en repli.
 - ~~Qualité du français de la base `famille`~~ : validée le 2026-10-06 (verdict de la phase 0).
-- Recherche web activée ou non pour la famille.
+- Recherche web activée ou non pour la famille (ne bloque pas l'ouverture).
