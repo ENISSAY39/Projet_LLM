@@ -7,8 +7,9 @@ Pour la durée du test : supprime OLLAMA_CONTEXT_LENGTH, pose OLLAMA_KEEP_ALIVE,
 ouvre le port 3000 sur le profil Privé, active le démarrage d'Ollama et de Docker
 Desktop, et règle la fermeture du capot (secteur : rien ; batterie : veille).
 
-Ne lit ni n'écrit OLLAMA_MODELS ni OLLAMA_HOST. Signale sans corriger un réseau
-qui n'est pas Privé et toute règle « Public » sur le port 3000.
+Ne lit ni n'écrit OLLAMA_MODELS ni OLLAMA_HOST. Signale sans corriger toute règle
+« Public » sur le port 3000. L'accès passe par Tailscale, dont l'interface est en
+profil Privé : le profil des autres réseaux n'est pas contrôlé.
 
 Avant la première application, les valeurs d'origine sont notées dans
 %LOCALAPPDATA%\llm-maison\hote-avant.json ; -Annuler les remet.
@@ -120,20 +121,13 @@ function Set-CleAutoStart {
     return $Reglages
 }
 
-# Renvoie les avertissements : réseau non Privé, et règles entrantes autorisées sur le profil Public
-# qui ouvrent le port 3000, comptées puis regroupées par nom. Ne corrige rien.
-# Ne corrige rien.
+# Renvoie les avertissements : règles entrantes autorisées sur le profil Public qui ouvrent
+# le port 3000, comptées puis regroupées par nom. Ne corrige rien.
 function Get-AlertesReseau {
     param(
-        $Profils,
         $ReglesPort3000
     )
     $alertes = @()
-    foreach ($profil in $Profils) {
-        if ($profil.NetworkCategory -ne 'Private') {
-            $alertes += "Le réseau « $($profil.InterfaceAlias) » est en profil $($profil.NetworkCategory) : le passer en Privé dans les paramètres Windows (non corrigé par ce script)."
-        }
-    }
     $ouvertes = @($ReglesPort3000 | Where-Object {
         $_.DisplayName -ne $NomRegle -and $_.Action -eq 'Allow' -and $_.Profile -match 'Public'
     })
@@ -185,7 +179,6 @@ function Get-EtatActuel {
         DockerCle        = $dockerCle
         DockerValeur     = $dockerValeur
         Capot            = Get-ReglageCapot
-        Profils          = @(Get-NetConnectionProfile -ErrorAction SilentlyContinue)
     }
 }
 
@@ -325,7 +318,7 @@ function Test-Administrateur {
 function Invoke-Appliquer {
     $etat = Get-EtatActuel
 
-    foreach ($alerte in Get-AlertesReseau -Profils $etat.Profils -ReglesPort3000 $etat.ReglesPort) {
+    foreach ($alerte in Get-AlertesReseau -ReglesPort3000 $etat.ReglesPort) {
         Alerte $alerte
     }
 

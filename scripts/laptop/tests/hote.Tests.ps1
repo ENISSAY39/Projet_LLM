@@ -35,40 +35,32 @@ Describe 'Get-AlertesReseau' {
     $regleOuverte = [pscustomobject]@{ DisplayName = 'Autre règle'; Profile = 'Public'; Action = 'Allow' }
     $regleNotre = [pscustomobject]@{ DisplayName = $NomRegle; Profile = 'Private'; Action = 'Allow' }
 
-    It 'signale un Wi-Fi qui n''est pas en profil Privé' {
-        $profils = @([pscustomobject]@{ InterfaceAlias = 'Wi-Fi'; NetworkCategory = 'Public' })
-        $alertes = Get-AlertesReseau -Profils $profils -ReglesPort3000 @()
-        $alertes.Count | Should Be 1
-        $alertes[0] | Should Match 'Wi-Fi'
-    }
-
-    It 'ne signale pas un profil Privé' {
-        $profils = @([pscustomobject]@{ InterfaceAlias = 'Wi-Fi'; NetworkCategory = 'Private' })
-        $alertes = Get-AlertesReseau -Profils $profils -ReglesPort3000 @()
+    It 'ne signale rien sans règle sur le port 3000' {
+        $alertes = Get-AlertesReseau -ReglesPort3000 @()
         $alertes.Count | Should Be 0
     }
 
     It 'signale une règle entrante Public qui ouvre le port 3000' {
-        $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($regleOuverte)
+        $alertes = Get-AlertesReseau -ReglesPort3000 @($regleOuverte)
         ($alertes -join "`n") | Should Match '1 règle entrante'
         ($alertes -join "`n") | Should Match 'Autre règle'
     }
 
     It 'ignore une règle Any : seules les règles du profil Public sont signalées' {
         $regleAny = [pscustomobject]@{ DisplayName = 'Tout'; Profile = 'Any'; Action = 'Allow' }
-        $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($regleAny)
+        $alertes = Get-AlertesReseau -ReglesPort3000 @($regleAny)
         $alertes.Count | Should Be 0
     }
 
     It 'ignore une règle Public en Bloquer' {
         $regleBloquee = [pscustomobject]@{ DisplayName = 'Bloquee'; Profile = 'Public'; Action = 'Block' }
-        $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($regleBloquee)
+        $alertes = Get-AlertesReseau -ReglesPort3000 @($regleBloquee)
         $alertes.Count | Should Be 0
     }
 
     It 'ignore une règle qui n''est pas Public (Privé seul)' {
         $reglePrivee = [pscustomobject]@{ DisplayName = 'Privee'; Profile = 'Private'; Action = 'Allow' }
-        $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($reglePrivee)
+        $alertes = Get-AlertesReseau -ReglesPort3000 @($reglePrivee)
         $alertes.Count | Should Be 0
     }
 
@@ -78,7 +70,7 @@ Describe 'Get-AlertesReseau' {
             [pscustomobject]@{ DisplayName = 'main.exe'; Profile = 'Public'; Action = 'Allow' },
             [pscustomobject]@{ DisplayName = 'postman.exe'; Profile = 'Domain, Private, Public'; Action = 'Allow' }
         )
-        $texte = (Get-AlertesReseau -Profils @() -ReglesPort3000 $regles) -join "`n"
+        $texte = (Get-AlertesReseau -ReglesPort3000 $regles) -join "`n"
         $texte | Should Match '3 règles'
         $texte | Should Match '2 noms'
         $texte | Should Match 'main\.exe \(×2\)'
@@ -86,7 +78,7 @@ Describe 'Get-AlertesReseau' {
     }
 
     It 'ne signale pas notre propre règle Privé' {
-        $alertes = Get-AlertesReseau -Profils @() -ReglesPort3000 @($regleNotre)
+        $alertes = Get-AlertesReseau -ReglesPort3000 @($regleNotre)
         $alertes.Count | Should Be 0
     }
 }
