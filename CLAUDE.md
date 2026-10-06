@@ -4,13 +4,19 @@ Contexte projet pour Claude Code. Tags, tailles et prix vérifiés le 2026-10-03
 
 ## État actuel
 
-Phase 0 en cours (spec : ticket #1), sur le laptop Windows (RTX 4060 8 Go, 32 Go de RAM, Ollama natif). Tickets fermés le 2026-10-03 :
+Phase 0 terminée le 2026-10-06 (spec : ticket #1), sur le laptop Windows (RTX 4060 8 Go, 32 Go de RAM, Ollama natif). Tous ses tickets sont fermés : #2 à #8 et #10.
 
 - #2 : l'alias `famille` tourne à 100 % GPU, `scripts/laptop/healthcheck.ps1` le vérifie.
 - #3 : Open WebUI en Compose (`docker-compose.yml`, image `v0.11.4`), branché sur l'Ollama natif, port 3000. Recréation du conteneur sans déconnexion non testée.
 - #4 : `scripts/laptop/hote.ps1` (variables, pare-feu port 3000 en Privé, démarrage d'Ollama et de Docker, capot ; `-WhatIf` et `-Annuler`), appliqué. `OLLAMA_KEEP_ALIVE` à `4h`. Annulation non testée sur la machine.
+- #5 : 4 comptes, les 3 comptes famille dans le groupe `famille` ; réglages dans `docs/config-ui.md`.
+- #6 : `scripts/laptop/backup.ps1` et `docs/restauration.md` ; archive du 2026-10-04 restaurée sur un volume de test. Seule archive présente dans `backups/`.
+- #7 : accès par Tailscale, nom `llm.tail8fed51.ts.net`, interface en Privé, couverte par la règle pare-feu du #4. Famille invitée, tests passés avec un compte famille (3000 accessible, 11434 refusé), service de retour après redémarrage, guide dans `docs/guide-famille.md`. Incident du 2026-10-04 : Tailscale a bloqué le PC et a dû être arrêté depuis le Gestionnaire des tâches, cause inconnue.
+- #10 : `hote.ps1` ne contrôle plus le profil des réseaux ; healthcheck passé en entier le 2026-10-06 (113 tokens/s, chargement à froid 25,7 s).
 
-Prochaines étapes, tickets ouverts : #5 comptes et droits, #6 sauvegarde et restauration du volume (prête pour l'agent), #7 accès téléphones par Tailscale et guide famille (Tailscale installé sur le laptop le 2026-10-04 : nom `llm.tail8fed51.ts.net` (renommé dans la console, relevé avec `tailscale status --json`), interface en Privé, la règle pare-feu du #4 la couvre, pas de nouvelle règle ; fait le 2026-10-04 : test en 5G sur l'iPhone de Yassine (Tailscale actif, Wi-Fi coupé, connexion admin, `famille` à ≈ 106 tokens/s) et politique d'accès enregistrée dans la console, tests passés ; reste le test avec un compte famille (3000 accessible, 11434 refusé), l'invitation des comptes, le guide famille et le test de redémarrage (démarrage automatique de Tailscale) ; incident à surveiller pendant les 7 jours : Tailscale a bloqué le PC le 2026-10-04 et a dû être arrêté depuis le Gestionnaire des tâches, cause inconnue), #8 semaine de test et verdict. Mettre cette section à jour à la fin de chaque phase.
+Verdict (#8), rendu par Yassine le 2026-10-06 après 2 jours d'usage par la famille au lieu des 7 prévus : français de `famille` validé ; choix du matériel jugé prématuré (voir « Points ouverts »).
+
+Prochaine étape : à décider, la phase 1 dépend du matériel. Mettre cette section à jour à la fin de chaque phase.
 
 ## Objectif
 
@@ -164,10 +170,10 @@ Profil `laptop` : Ollama est natif, les commandes `ollama` se lancent sans `dock
 
 ## Points ouverts
 
-- D'ici décembre 2027 : rester sur le laptop (option 0) ou monter l'option 1 ?
+- D'ici décembre 2027 : rester sur le laptop (option 0) ou monter l'option 1 ? Non tranché le 2026-10-06 : trop tôt pour choisir le matériel. Piste évoquée par Yassine pour la machine cible : un DGX Spark.
 - Machine cible : décision au jalon de novembre 2027 (`docs/materiel.md`).
 - Où vivra le serveur de décembre 2027 : à Montpellier (avec Yassine) ou à Toulouse (avec la famille) ? Conditionne la latence de la famille, l'accès SSH et l'admin, la box et l'électricité, et si Tailscale reste indispensable.
 - ~~Valeur de `OLLAMA_KEEP_ALIVE` sur le laptop~~ : décidé le 2026-10-03, `4h` (ticket #4, sur le cas de 31 s).
 - Canal de notification des alertes (Telegram, Discord, e-mail).
-- Qualité du français de la base `famille` : à valider en phase 0.
+- ~~Qualité du français de la base `famille`~~ : validée le 2026-10-06 (verdict de la phase 0).
 - Recherche web activée ou non pour la famille.
